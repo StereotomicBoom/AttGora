@@ -27,6 +27,28 @@ struct ContentView: View {
     @State private var filter: Filter = .all
     @State private var selection = Set<UUID>()
     @FocusState private var newTaskFocused: Bool
+    @State private var draggingID: UUID?
+    @State private var dragSteps = 0
+    @State private var rowHeight: CGFloat = 30
+
+    private var dragIndices: (from: Int, to: Int)? {
+        guard let id = draggingID, let from = visibleIDs.firstIndex(of: id) else { return nil }
+        return (from, min(max(from + dragSteps, 0), visibleIDs.count - 1))
+    }
+
+    private func dropLine(at index: Int) -> VerticalEdge? {
+        guard let d = dragIndices, d.to == index, d.to != d.from else { return nil }
+        return d.to < d.from ? .top : .bottom
+    }
+
+    private func finishDrag() {
+        if let d = dragIndices, d.to != d.from {
+            store.move(visible: visibleIDs, from: IndexSet(integer: d.from),
+                       to: d.to > d.from ? d.to + 1 : d.to)
+        }
+        draggingID = nil
+        dragSteps = 0
+    }
 
     private var visibleIDs: [UUID] {
         store.items.filter { item in
@@ -82,8 +104,20 @@ struct ContentView: View {
             Rule()
 
             List(selection: $selection) {
-                ForEach(Array(visibleIDs.enumerated()), id: \.element) { index, id in
-                    TodoRow(item: binding(id), number: index + 1)
+                ForEach(visibleIDs, id: \.self) { id in
+                    let index = visibleIDs.firstIndex(of: id) ?? 0
+                    TodoRow(
+                        item: binding(id),
+                        number: index + 1,
+                        isDragging: draggingID == id,
+                        dropLine: dropLine(at: index),
+                        onDrag: { dy in
+                            draggingID = id
+                            dragSteps = Int((dy / rowHeight).rounded())
+                        },
+                        onDrop: finishDrag,
+                        onHeight: { rowHeight = $0 + 8 }
+                    )
                         .tag(id)
                         .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 8))
                         .listRowSeparator(.visible)
@@ -103,9 +137,6 @@ struct ContentView: View {
                                 store.delete([id])
                             }
                         }
-                }
-                .onMove { source, destination in
-                    store.move(visible: visibleIDs, from: source, to: destination)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -149,7 +180,13 @@ struct ContentView: View {
 struct TodoRow: View {
     @Binding var item: TodoItem
     let number: Int
+    let isDragging: Bool
+    let dropLine: VerticalEdge?
+    let onDrag: (CGFloat) -> Void
+    let onDrop: () -> Void
+    let onHeight: (CGFloat) -> Void
     @State private var editing = false
+    @State private var longPressed = false
     @FocusState private var titleFocused: Bool
 
     var body: some View {
@@ -192,20 +229,53 @@ struct TodoRow: View {
                     .italic(item.done)
                     .foregroundStyle(titleColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) { editing = true }
-                    .onTapGesture {
-                        if !item.done { item.inProgress.toggle() }
-                    }
-                    .help(item.done ? "" : "Klicka: pågår av/på · Dubbelklicka: ändra text")
+                    .help(item.done ? "" : "Klicka: pågår av/på · Håll in och dra: flytta · Dubbelklicka: ändra text")
             }
         }
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
+        .gesture(tapGesture, including: editing ? .subviews : .all)
+        .simultaneousGesture(dragGesture, including: editing ? .subviews : .all)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onHeight($0) }
+        .overlay {
+            if isDragging {
+                RoundedRectangle(cornerRadius: 6).stroke(Color.accentColor, lineWidth: 2)
+            }
+        }
+        .overlay(alignment: dropLine == .bottom ? .bottom : .top) {
+            if dropLine != nil {
+                Rectangle().fill(Color.accentColor).frame(height: 3)
+                    .offset(y: dropLine == .bottom ? 5 : -5)
+            }
+        }
         .listRowBackground(
             item.inProgress
                 ? RoundedRectangle(cornerRadius: 6).fill(Color.inProgress).padding(.horizontal, 4)
                 : nil
         )
+    }
+
+    private var dragGesture: some Gesture {
+        LongPressGesture(minimumDuration: 0.35)
+            .sequenced(before: DragGesture(minimumDistance: 0))
+            .onChanged { value in
+                if case .second(true, let drag) = value {
+                    longPressed = true
+                    onDrag(drag?.translation.height ?? 0)
+                }
+            }
+            .onEnded { _ in
+                onDrop()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { longPressed = false }
+            }
+    }
+
+    private var tapGesture: some Gesture {
+        TapGesture(count: 2).onEnded { editing = true }
+            .exclusively(before: TapGesture().onEnded {
+                guard !longPressed else { return }
+                if !item.done { item.inProgress.toggle() }
+            })
     }
 
     private var titleColor: Color {
