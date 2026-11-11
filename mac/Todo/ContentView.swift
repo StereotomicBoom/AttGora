@@ -40,9 +40,9 @@ struct ContentView: View {
             HStack {
                 TextField("Ny uppgift", text: $newTitle)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 20))
+                    .font(.system(size: 26))
                     .padding(.horizontal, 12)
-                    .frame(height: 44)
+                    .frame(height: 57)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.paperLight)
@@ -64,6 +64,7 @@ struct ContentView: View {
                 ForEach(Filter.allCases) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
+            .controlSize(.large)
             .labelsHidden()
             .padding(.horizontal)
             .padding(.bottom, 8)
@@ -111,6 +112,7 @@ struct ContentView: View {
             }
             .padding()
         }
+        .font(.system(size: 17))
         .background(Color.paper)
         .toolbarBackground(Color.paper, for: .windowToolbar)
         .toolbarBackground(.visible, for: .windowToolbar)
@@ -134,13 +136,14 @@ struct TodoRow: View {
         HStack {
             Toggle("", isOn: $item.done)
                 .toggleStyle(.checkbox)
+                .controlSize(.large)
                 .labelsHidden()
             Button {
                 item.priority = (item.priority + 1) % Priority.allCases.count
             } label: {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(priorityColor)
-                    .frame(width: 14, height: 14)
+                    .frame(width: 18, height: 18)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
