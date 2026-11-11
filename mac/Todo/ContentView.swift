@@ -1,5 +1,11 @@
 import SwiftUI
 
+extension Color {
+    static let paper = Color(red: 0.965, green: 0.945, blue: 0.906)
+    static let paperLight = Color(red: 0.988, green: 0.978, blue: 0.957)
+    static let paperEdge = Color(red: 0.84, green: 0.80, blue: 0.73)
+}
+
 enum Filter: String, CaseIterable, Identifiable {
     case all = "Alla", active = "Kvar", done = "Klara"
     var id: Self { self }
@@ -39,11 +45,11 @@ struct ContentView: View {
                     .frame(height: 44)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(nsColor: .textBackgroundColor))
+                            .fill(Color.paperLight)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(newTaskFocused ? Color.accentColor : Color.secondary.opacity(0.4),
+                            .stroke(newTaskFocused ? Color.accentColor : Color.paperEdge,
                                     lineWidth: newTaskFocused ? 2 : 1)
                     )
                     .focused($newTaskFocused)
@@ -86,6 +92,8 @@ struct ContentView: View {
                     store.move(visible: visibleIDs, from: source, to: destination)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.paper)
             .onDeleteCommand { store.delete(selection); selection.removeAll() }
             .overlay {
                 if visibleIDs.isEmpty {
@@ -103,6 +111,10 @@ struct ContentView: View {
             }
             .padding()
         }
+        .background(Color.paper)
+        .toolbarBackground(Color.paper, for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
+        .preferredColorScheme(.light)
         .onAppear { newTaskFocused = true }
         .onReceive(NotificationCenter.default.publisher(for: .focusNewTask)) { _ in
             newTaskFocused = true
