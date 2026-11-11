@@ -1,9 +1,9 @@
 import SwiftUI
 
 extension Color {
-    static let paper = Color(red: 0.982, green: 0.972, blue: 0.953)
-    static let paperLight = Color(red: 0.994, green: 0.989, blue: 0.978)
-    static let paperEdge = Color(red: 0.84, green: 0.80, blue: 0.73)
+    static let paper = Color.white
+    static let paperLight = Color.white
+    static let paperEdge = Color(white: 0.82)
 }
 
 enum Filter: String, CaseIterable, Identifiable {
