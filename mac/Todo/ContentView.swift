@@ -6,6 +6,7 @@ extension Color {
     static let paperEdge = Color(white: 0.55)
     static let rule = Color(white: 0.72)
     static let muted = Color(white: 0.36)
+    static let doneText = Color(white: 0.55)
 }
 
 struct Rule: View {
@@ -165,11 +166,13 @@ struct TodoRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .opacity(item.done ? 0.4 : 1)
             .help("Prioritet: \(Priority(rawValue: item.priority)?.name ?? "Ingen") (klicka för att ändra)")
             TextField("Uppgift", text: $item.title)
                 .textFieldStyle(.plain)
                 .strikethrough(item.done)
-                .foregroundStyle(item.done ? Color.muted : Color.primary)
+                .italic(item.done)
+                .foregroundStyle(item.done ? Color.doneText : Color.primary)
         }
         .padding(.vertical, 2)
     }
