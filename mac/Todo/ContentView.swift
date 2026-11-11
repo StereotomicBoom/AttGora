@@ -7,6 +7,7 @@ extension Color {
     static let rule = Color(white: 0.72)
     static let muted = Color(white: 0.36)
     static let doneText = Color(white: 0.55)
+    static let inProgress = Color(red: 0.0, green: 0.38, blue: 0.85)
 }
 
 struct Rule: View {
@@ -146,6 +147,8 @@ struct ContentView: View {
 
 struct TodoRow: View {
     @Binding var item: TodoItem
+    @State private var editing = false
+    @FocusState private var titleFocused: Bool
 
     var body: some View {
         HStack {
@@ -168,13 +171,36 @@ struct TodoRow: View {
             .buttonStyle(.plain)
             .opacity(item.done ? 0.4 : 1)
             .help("Prioritet: \(Priority(rawValue: item.priority)?.name ?? "Ingen") (klicka för att ändra)")
-            TextField("Uppgift", text: $item.title)
-                .textFieldStyle(.plain)
-                .strikethrough(item.done)
-                .italic(item.done)
-                .foregroundStyle(item.done ? Color.doneText : Color.primary)
+            if editing {
+                TextField("Uppgift", text: $item.title)
+                    .textFieldStyle(.plain)
+                    .focused($titleFocused)
+                    .onSubmit { editing = false }
+                    .onChange(of: titleFocused) { _, focused in
+                        if !focused { editing = false }
+                    }
+                    .onAppear { titleFocused = true }
+            } else {
+                Text(item.title)
+                    .strikethrough(item.done)
+                    .italic(item.done)
+                    .fontWeight(item.inProgress ? .semibold : .regular)
+                    .foregroundStyle(titleColor)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) { editing = true }
+                    .onTapGesture {
+                        if !item.done { item.inProgress.toggle() }
+                    }
+                    .help(item.done ? "" : "Klicka: pågår av/på · Dubbelklicka: ändra text")
+            }
         }
         .padding(.vertical, 2)
+    }
+
+    private var titleColor: Color {
+        if item.done { return .doneText }
+        return item.inProgress ? .inProgress : .primary
     }
 
     private var priorityColor: Color {

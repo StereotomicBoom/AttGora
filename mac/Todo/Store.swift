@@ -6,6 +6,7 @@ struct TodoItem: Codable, Identifiable, Equatable {
     var done = false
     var created = Date()
     var priority = 0
+    var inProgress = false
 
     init(id: UUID = UUID(), title: String) {
         self.id = id
@@ -19,6 +20,7 @@ struct TodoItem: Codable, Identifiable, Equatable {
         done = try c.decodeIfPresent(Bool.self, forKey: .done) ?? false
         created = try c.decodeIfPresent(Date.self, forKey: .created) ?? Date()
         priority = try c.decodeIfPresent(Int.self, forKey: .priority) ?? 0
+        inProgress = try c.decodeIfPresent(Bool.self, forKey: .inProgress) ?? false
     }
 }
 
@@ -40,7 +42,11 @@ enum Priority: Int, CaseIterable, Identifiable {
 final class TodoStore: ObservableObject {
     @Published var items: [TodoItem] = [] {
         didSet {
-            let ordered = items.filter { !$0.done } + items.filter { $0.done }
+            let ordered = (items.filter { !$0.done } + items.filter { $0.done }).map { item in
+                var item = item
+                if item.done { item.inProgress = false }
+                return item
+            }
             if ordered != items { items = ordered }
             save()
         }
