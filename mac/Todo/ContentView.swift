@@ -82,8 +82,8 @@ struct ContentView: View {
             Rule()
 
             List(selection: $selection) {
-                ForEach(visibleIDs, id: \.self) { id in
-                    TodoRow(item: binding(id))
+                ForEach(Array(visibleIDs.enumerated()), id: \.element) { index, id in
+                    TodoRow(item: binding(id), number: index + 1)
                         .tag(id)
                         .listRowSeparator(.visible)
                         .listRowSeparatorTint(Color.rule)
@@ -147,11 +147,16 @@ struct ContentView: View {
 
 struct TodoRow: View {
     @Binding var item: TodoItem
+    let number: Int
     @State private var editing = false
     @FocusState private var titleFocused: Bool
 
     var body: some View {
         HStack {
+            Text("\(number).")
+                .monospacedDigit()
+                .foregroundStyle(Color.muted)
+                .frame(minWidth: 28, alignment: .trailing)
             Toggle("", isOn: $item.done)
                 .toggleStyle(.checkbox)
                 .controlSize(.large)
