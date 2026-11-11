@@ -71,7 +71,7 @@ final class TodoStore: ObservableObject {
     func add(_ title: String) {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        items.append(TodoItem(title: trimmed))
+        items.insert(TodoItem(title: trimmed), at: 0)
     }
 
     func item(_ id: UUID) -> TodoItem? {
