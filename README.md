@@ -11,6 +11,8 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 - Add a task in the "Ny uppgift" field (Return or "Lägg till"). ⌘N jumps to the field.
 - Click a task's text to edit it; tick the checkbox to mark it done.
 - Delete with the Delete key on a selected row, or right-click → "Ta bort".
+- Completed tasks sink to the bottom automatically; unticking moves a task back up.
+- Drag tasks to reorder them (in any filter). Unfinished tasks always stay above completed ones.
 - Filter: Alla / Kvar / Klara. The footer shows how many are left and has "Rensa klara".
 
 ## Quick start

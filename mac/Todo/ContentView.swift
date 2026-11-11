@@ -12,24 +12,44 @@ struct ContentView: View {
     @State private var selection = Set<UUID>()
     @FocusState private var newTaskFocused: Bool
 
-    private var visibleIndices: [Int] {
-        store.items.indices.filter { i in
+    private var visibleIDs: [UUID] {
+        store.items.filter { item in
             switch filter {
             case .all: true
-            case .active: !store.items[i].done
-            case .done: store.items[i].done
+            case .active: !item.done
+            case .done: item.done
             }
-        }
+        }.map(\.id)
+    }
+
+    private func binding(_ id: UUID) -> Binding<TodoItem> {
+        Binding(
+            get: { store.item(id) ?? TodoItem(id: id, title: "") },
+            set: { store.update($0) }
+        )
     }
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 TextField("Ny uppgift", text: $newTitle)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 20))
+                    .padding(.horizontal, 12)
+                    .frame(height: 44)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(nsColor: .textBackgroundColor))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(newTaskFocused ? Color.accentColor : Color.secondary.opacity(0.4),
+                                    lineWidth: newTaskFocused ? 2 : 1)
+                    )
                     .focused($newTaskFocused)
                     .onSubmit(add)
                 Button("Lägg till", action: add)
+                    .controlSize(.large)
                     .disabled(newTitle.trimmingCharacters(in: .whitespaces).isEmpty)
             }
             .padding()
@@ -43,19 +63,22 @@ struct ContentView: View {
             .padding(.bottom, 8)
 
             List(selection: $selection) {
-                ForEach(visibleIndices, id: \.self) { i in
-                    TodoRow(item: $store.items[i])
-                        .tag(store.items[i].id)
+                ForEach(visibleIDs, id: \.self) { id in
+                    TodoRow(item: binding(id))
+                        .tag(id)
                         .contextMenu {
                             Button("Ta bort", role: .destructive) {
-                                store.delete([store.items[i].id])
+                                store.delete([id])
                             }
                         }
+                }
+                .onMove { source, destination in
+                    store.move(visible: visibleIDs, from: source, to: destination)
                 }
             }
             .onDeleteCommand { store.delete(selection); selection.removeAll() }
             .overlay {
-                if visibleIndices.isEmpty {
+                if visibleIDs.isEmpty {
                     Text(store.items.isEmpty ? "Inget att göra 🎉" : "Inga uppgifter här")
                         .foregroundStyle(.secondary)
                 }

@@ -10,7 +10,11 @@ struct TodoItem: Codable, Identifiable, Equatable {
 @MainActor
 final class TodoStore: ObservableObject {
     @Published var items: [TodoItem] = [] {
-        didSet { save() }
+        didSet {
+            let ordered = items.filter { !$0.done } + items.filter { $0.done }
+            if ordered != items { items = ordered }
+            save()
+        }
     }
 
     private let url: URL = {
@@ -23,7 +27,7 @@ final class TodoStore: ObservableObject {
     init() {
         if let data = try? Data(contentsOf: url),
            let decoded = try? JSONDecoder().decode([TodoItem].self, from: data) {
-            items = decoded
+            items = decoded.filter { !$0.done } + decoded.filter { $0.done }
         }
     }
 
@@ -33,6 +37,24 @@ final class TodoStore: ObservableObject {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         items.append(TodoItem(title: trimmed))
+    }
+
+    func item(_ id: UUID) -> TodoItem? {
+        items.first { $0.id == id }
+    }
+
+    func update(_ item: TodoItem) {
+        guard let i = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[i] = item
+    }
+
+    func move(visible: [UUID], from source: IndexSet, to destination: Int) {
+        var reordered = visible
+        reordered.move(fromOffsets: source, toOffset: destination)
+        let visibleSet = Set(visible)
+        let byId = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
+        var next = reordered.makeIterator()
+        items = items.map { visibleSet.contains($0.id) ? byId[next.next()!]! : $0 }
     }
 
     func delete(_ ids: Set<UUID>) {
