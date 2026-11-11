@@ -195,6 +195,8 @@ struct TodoRow: View {
                 .monospacedDigit()
                 .foregroundStyle(Color.muted)
                 .frame(minWidth: 18, alignment: .trailing)
+                .contentShape(Rectangle())
+                .gesture(tapGesture)
             Toggle("", isOn: $item.done)
                 .toggleStyle(.checkbox)
                 .controlSize(.large)
@@ -229,12 +231,13 @@ struct TodoRow: View {
                     .italic(item.done)
                     .foregroundStyle(titleColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .gesture(tapGesture)
                     .help(item.done ? "" : "Klicka: pågår av/på · Håll in och dra: flytta · Dubbelklicka: ändra text")
             }
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
-        .gesture(tapGesture, including: editing ? .subviews : .all)
         .simultaneousGesture(dragGesture, including: editing ? .subviews : .all)
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onHeight($0) }
         .overlay {
