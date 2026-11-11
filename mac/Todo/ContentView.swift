@@ -1,8 +1,8 @@
 import SwiftUI
 
 extension Color {
-    static let paper = Color(red: 0.965, green: 0.945, blue: 0.906)
-    static let paperLight = Color(red: 0.988, green: 0.978, blue: 0.957)
+    static let paper = Color(red: 0.982, green: 0.972, blue: 0.953)
+    static let paperLight = Color(red: 0.994, green: 0.989, blue: 0.978)
     static let paperEdge = Color(red: 0.84, green: 0.80, blue: 0.73)
 }
 
