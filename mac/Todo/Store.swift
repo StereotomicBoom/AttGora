@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 struct TodoItem: Codable, Identifiable, Equatable {
     var id = UUID()
