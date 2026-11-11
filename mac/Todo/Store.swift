@@ -5,6 +5,35 @@ struct TodoItem: Codable, Identifiable, Equatable {
     var title: String
     var done = false
     var created = Date()
+    var priority = 0
+
+    init(id: UUID = UUID(), title: String) {
+        self.id = id
+        self.title = title
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        title = try c.decode(String.self, forKey: .title)
+        done = try c.decodeIfPresent(Bool.self, forKey: .done) ?? false
+        created = try c.decodeIfPresent(Date.self, forKey: .created) ?? Date()
+        priority = try c.decodeIfPresent(Int.self, forKey: .priority) ?? 0
+    }
+}
+
+enum Priority: Int, CaseIterable, Identifiable {
+    case none, low, medium, high
+    var id: Int { rawValue }
+
+    var name: String {
+        switch self {
+        case .none: "Ingen"
+        case .low: "Låg"
+        case .medium: "Medel"
+        case .high: "Hög"
+        }
+    }
 }
 
 @MainActor

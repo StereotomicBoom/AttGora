@@ -13,6 +13,7 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 - Delete with the Delete key on a selected row, or right-click → "Ta bort".
 - Completed tasks sink to the bottom automatically; unticking moves a task back up.
 - Drag tasks to reorder them (in any filter). Unfinished tasks always stay above completed ones.
+- Priority: click the coloured square next to the checkbox to step through grey (none) → green (low) → orange (medium) → red (high), or right-click → "Prioritet". It is a label only; it does not change the order.
 - Filter: Alla / Kvar / Klara. The footer shows how many are left and has "Rensa klara".
 
 ## Quick start

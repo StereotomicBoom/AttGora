@@ -67,6 +67,16 @@ struct ContentView: View {
                     TodoRow(item: binding(id))
                         .tag(id)
                         .contextMenu {
+                            Menu("Prioritet") {
+                                ForEach(Priority.allCases) { p in
+                                    Button(p.name) {
+                                        if var item = store.item(id) {
+                                            item.priority = p.rawValue
+                                            store.update(item)
+                                        }
+                                    }
+                                }
+                            }
                             Button("Ta bort", role: .destructive) {
                                 store.delete([id])
                             }
@@ -113,11 +123,30 @@ struct TodoRow: View {
             Toggle("", isOn: $item.done)
                 .toggleStyle(.checkbox)
                 .labelsHidden()
+            Button {
+                item.priority = (item.priority + 1) % Priority.allCases.count
+            } label: {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(priorityColor)
+                    .frame(width: 14, height: 14)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Prioritet: \(Priority(rawValue: item.priority)?.name ?? "Ingen") (klicka för att ändra)")
             TextField("Uppgift", text: $item.title)
                 .textFieldStyle(.plain)
                 .strikethrough(item.done)
                 .foregroundStyle(item.done ? .secondary : .primary)
         }
         .padding(.vertical, 2)
+    }
+
+    private var priorityColor: Color {
+        switch Priority(rawValue: item.priority) ?? .none {
+        case .none: .gray.opacity(0.35)
+        case .low: .green
+        case .medium: .orange
+        case .high: .red
+        }
     }
 }

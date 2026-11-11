@@ -14,10 +14,11 @@ Written 2026-11-11 for whoever picks this app up next, person or AI session. **[
 
 ## State as of 2026-11-11
 
-Add, edit, complete, delete, filter, clear completed, ⌘N, drag to reorder, completed tasks kept at the bottom, a larger "Ny uppgift" field. Built with plain `swiftc -parse-as-library` (no Xcode project, no SwiftPM).
+Add, edit, complete, delete, filter, clear completed, ⌘N, drag to reorder, completed tasks kept at the bottom, a larger "Ny uppgift" field, a 4-grade priority colour per task (`priority` 0–3, see `Priority` in Store.swift; label only, no sorting). Built with plain `swiftc -parse-as-library` (no Xcode project, no SwiftPM).
 
 ## Traps
 
+- `TodoItem` has a hand-written `init(from:)` using `decodeIfPresent`, so older `todos.json` files without newer fields still load. Add new fields there too.
 - **No SwiftData.** Storage is a Codable JSON file, chosen because SwiftData macros don't build reliably with plain `swiftc`. Changing `TodoItem`'s fields breaks decoding of existing data unless new fields are optional or have defaults handled in a custom decoder; a failed decode starts with an empty list and the next save overwrites the file.
 - `TodoStore.items`'s `didSet` re-sorts unfinished before finished (stable), so any mutation can reorder the array. Rows are addressed by id, not index, for that reason. `move(visible:from:to:)` reorders only the slots of the currently visible ids.
 - `TodoStore.items` saves on every `didSet`, including each keystroke while editing a task. Fine for small lists.
