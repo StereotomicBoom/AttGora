@@ -9,7 +9,7 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 ## Features
 
 - Add a task in the "Ny uppgift" field (Return or "Lägg till"). ⌘N jumps to the field.
-- Click a task's text to mark it as in progress (blue, semibold); click again to turn it off. Double-click the text to edit it. Tick the checkbox to mark it done (this also clears "in progress").
+- Click a task's text to mark it as in progress (light blue row background); click again to turn it off. Double-click the text to edit it. Tick the checkbox to mark it done (this also clears "in progress").
 - Delete with the Delete key on a selected row, or right-click → "Ta bort".
 - Completed tasks sink to the bottom automatically; unticking moves a task back up.
 - Drag tasks to reorder them (in any filter). Unfinished tasks always stay above completed ones.

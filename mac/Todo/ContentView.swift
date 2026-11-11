@@ -7,7 +7,7 @@ extension Color {
     static let rule = Color(white: 0.72)
     static let muted = Color(white: 0.36)
     static let doneText = Color(white: 0.55)
-    static let inProgress = Color(red: 0.0, green: 0.38, blue: 0.85)
+    static let inProgress = Color(red: 0.84, green: 0.91, blue: 1.0)
 }
 
 struct Rule: View {
@@ -184,7 +184,6 @@ struct TodoRow: View {
                 Text(item.title)
                     .strikethrough(item.done)
                     .italic(item.done)
-                    .fontWeight(item.inProgress ? .semibold : .regular)
                     .foregroundStyle(titleColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
@@ -196,11 +195,15 @@ struct TodoRow: View {
             }
         }
         .padding(.vertical, 2)
+        .listRowBackground(
+            item.inProgress
+                ? RoundedRectangle(cornerRadius: 6).fill(Color.inProgress).padding(.horizontal, 4)
+                : nil
+        )
     }
 
     private var titleColor: Color {
-        if item.done { return .doneText }
-        return item.inProgress ? .inProgress : .primary
+        item.done ? .doneText : .primary
     }
 
     private var priorityColor: Color {
