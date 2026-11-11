@@ -85,6 +85,7 @@ struct ContentView: View {
                 ForEach(Array(visibleIDs.enumerated()), id: \.element) { index, id in
                     TodoRow(item: binding(id), number: index + 1)
                         .tag(id)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 8))
                         .listRowSeparator(.visible)
                         .listRowSeparatorTint(Color.rule)
                         .contextMenu {
@@ -156,7 +157,7 @@ struct TodoRow: View {
             Text("\(number).")
                 .monospacedDigit()
                 .foregroundStyle(Color.muted)
-                .frame(minWidth: 28, alignment: .trailing)
+                .frame(minWidth: 18, alignment: .trailing)
             Toggle("", isOn: $item.done)
                 .toggleStyle(.checkbox)
                 .controlSize(.large)
