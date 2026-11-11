@@ -3,7 +3,15 @@ import SwiftUI
 extension Color {
     static let paper = Color.white
     static let paperLight = Color.white
-    static let paperEdge = Color(white: 0.82)
+    static let paperEdge = Color(white: 0.55)
+    static let rule = Color(white: 0.72)
+    static let muted = Color(white: 0.36)
+}
+
+struct Rule: View {
+    var body: some View {
+        Rectangle().fill(Color.rule).frame(height: 1)
+    }
 }
 
 enum Filter: String, CaseIterable, Identifiable {
@@ -50,7 +58,7 @@ struct ContentView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(newTaskFocused ? Color.accentColor : Color.paperEdge,
-                                    lineWidth: newTaskFocused ? 2 : 1)
+                                    lineWidth: newTaskFocused ? 2 : 1.5)
                     )
                     .focused($newTaskFocused)
                     .onSubmit(add)
@@ -69,10 +77,14 @@ struct ContentView: View {
             .padding(.horizontal)
             .padding(.bottom, 8)
 
+            Rule()
+
             List(selection: $selection) {
                 ForEach(visibleIDs, id: \.self) { id in
                     TodoRow(item: binding(id))
                         .tag(id)
+                        .listRowSeparator(.visible)
+                        .listRowSeparatorTint(Color.rule)
                         .contextMenu {
                             Menu("Prioritet") {
                                 ForEach(Priority.allCases) { p in
@@ -99,13 +111,15 @@ struct ContentView: View {
             .overlay {
                 if visibleIDs.isEmpty {
                     Text(store.items.isEmpty ? "Inget att göra 🎉" : "Inga uppgifter här")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.muted)
                 }
             }
 
+            Rule()
+
             HStack {
                 Text("\(store.remaining) kvar")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.muted)
                 Spacer()
                 Button("Rensa klara", action: store.clearCompleted)
                     .disabled(store.items.allSatisfy { !$0.done })
@@ -143,6 +157,10 @@ struct TodoRow: View {
             } label: {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(priorityColor)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 3)
+                            .strokeBorder(item.priority == 0 ? Color(white: 0.45) : .clear, lineWidth: 1.5)
+                    )
                     .frame(width: 18, height: 18)
                     .contentShape(Rectangle())
             }
@@ -151,17 +169,17 @@ struct TodoRow: View {
             TextField("Uppgift", text: $item.title)
                 .textFieldStyle(.plain)
                 .strikethrough(item.done)
-                .foregroundStyle(item.done ? .secondary : .primary)
+                .foregroundStyle(item.done ? Color.muted : Color.primary)
         }
         .padding(.vertical, 2)
     }
 
     private var priorityColor: Color {
         switch Priority(rawValue: item.priority) ?? .none {
-        case .none: .gray.opacity(0.35)
-        case .low: .green
-        case .medium: .orange
-        case .high: .red
+        case .none: .clear
+        case .low: Color(red: 0.13, green: 0.58, blue: 0.24)
+        case .medium: Color(red: 0.90, green: 0.45, blue: 0.0)
+        case .high: Color(red: 0.82, green: 0.11, blue: 0.11)
         }
     }
 }

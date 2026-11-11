@@ -14,7 +14,7 @@ Written 2026-11-11 for whoever picks this app up next, person or AI session. **[
 
 ## State as of 2026-11-11
 
-Add, edit, complete, delete, filter, clear completed, ⌘N, drag to reorder, completed tasks kept at the bottom, a larger "Ny uppgift" field, a 4-grade priority colour per task (`priority` 0–3, see `Priority` in Store.swift; label only, no sorting). White theme (was warm paper white; names kept): colours are `Color.paper`, `.paperLight` and `.paperEdge` at the top of ContentView.swift; `.preferredColorScheme(.light)` forces light mode. The row selection highlight is still the system accent colour. Built with plain `swiftc -parse-as-library` (no Xcode project, no SwiftPM).
+Add, edit, complete, delete, filter, clear completed, ⌘N, drag to reorder, completed tasks kept at the bottom, a larger "Ny uppgift" field, a 4-grade priority colour per task (`priority` 0–3, see `Priority` in Store.swift; label only, no sorting). White theme (was warm paper white; names kept): colours are `Color.paper`, `.paperLight`, `.paperEdge` (input border), `.rule` (dividers) and `.muted` (done tasks, counts) at the top of ContentView.swift; `.preferredColorScheme(.light)` forces light mode. The row selection highlight is still the system accent colour. Built with plain `swiftc -parse-as-library` (no Xcode project, no SwiftPM).
 
 ## Traps
 
