@@ -25,10 +25,10 @@ struct ContentView: View {
     @ObservedObject var store: TodoStore
     @State private var newTitle = ""
     @State private var filter: Filter = .all
-    @State private var selection = Set<UUID>()
     @FocusState private var newTaskFocused: Bool
     @State private var draggingID: UUID?
     @State private var dragSteps = 0
+    @State private var dragOffset: CGFloat = 0
     @State private var rowHeight: CGFloat = 30
 
     private var dragIndices: (from: Int, to: Int)? {
@@ -36,18 +36,26 @@ struct ContentView: View {
         return (from, min(max(from + dragSteps, 0), visibleIDs.count - 1))
     }
 
-    private func dropLine(at index: Int) -> VerticalEdge? {
-        guard let d = dragIndices, d.to == index, d.to != d.from else { return nil }
-        return d.to < d.from ? .top : .bottom
+    private func shift(at index: Int) -> CGFloat {
+        guard let d = dragIndices else { return 0 }
+        if index == d.from { return dragOffset }
+        if d.from < index && index <= d.to { return -rowHeight }
+        if d.to <= index && index < d.from { return rowHeight }
+        return 0
     }
 
     private func finishDrag() {
-        if let d = dragIndices, d.to != d.from {
-            store.move(visible: visibleIDs, from: IndexSet(integer: d.from),
-                       to: d.to > d.from ? d.to + 1 : d.to)
+        var t = Transaction()
+        t.disablesAnimations = true
+        withTransaction(t) {
+            if let d = dragIndices, d.to != d.from {
+                store.move(visible: visibleIDs, from: IndexSet(integer: d.from),
+                           to: d.to > d.from ? d.to + 1 : d.to)
+            }
+            draggingID = nil
+            dragSteps = 0
+            dragOffset = 0
         }
-        draggingID = nil
-        dragSteps = 0
     }
 
     private var visibleIDs: [UUID] {
@@ -103,25 +111,26 @@ struct ContentView: View {
 
             Rule()
 
-            List(selection: $selection) {
-                ForEach(visibleIDs, id: \.self) { id in
-                    let index = visibleIDs.firstIndex(of: id) ?? 0
-                    TodoRow(
-                        item: binding(id),
-                        number: index + 1,
-                        isDragging: draggingID == id,
-                        dropLine: dropLine(at: index),
-                        onDrag: { dy in
-                            draggingID = id
-                            dragSteps = Int((dy / rowHeight).rounded())
-                        },
-                        onDrop: finishDrag,
-                        onHeight: { rowHeight = $0 + 8 }
-                    )
-                        .tag(id)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 8))
-                        .listRowSeparator(.visible)
-                        .listRowSeparatorTint(Color.rule)
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(Array(visibleIDs.enumerated()), id: \.element) { index, id in
+                        let isDragging = draggingID == id
+                        VStack(spacing: 0) {
+                            TodoRow(
+                                item: binding(id),
+                                number: index + 1,
+                                onDrag: { dy in
+                                    draggingID = id
+                                    dragOffset = dy
+                                    dragSteps = Int((dy / rowHeight).rounded())
+                                },
+                                onDrop: finishDrag
+                            )
+                            .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 8))
+                            Rule().padding(.leading, 4)
+                        }
+                        .background(Color.paper)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { rowHeight = $0 }
                         .contextMenu {
                             Menu("Prioritet") {
                                 ForEach(Priority.allCases) { p in
@@ -137,11 +146,15 @@ struct ContentView: View {
                                 store.delete([id])
                             }
                         }
+                        .shadow(color: .black.opacity(isDragging ? 0.25 : 0), radius: 6, y: 2)
+                        .offset(y: shift(at: index))
+                        .animation(isDragging ? nil : .easeInOut(duration: 0.15), value: shift(at: index))
+                        .zIndex(isDragging ? 1 : 0)
+                    }
                 }
+                .padding(.horizontal, 4)
             }
-            .scrollContentBackground(.hidden)
             .background(Color.paper)
-            .onDeleteCommand { store.delete(selection); selection.removeAll() }
             .overlay {
                 if visibleIDs.isEmpty {
                     Text(store.items.isEmpty ? "Inget att göra 🎉" : "Inga uppgifter här")
@@ -180,11 +193,8 @@ struct ContentView: View {
 struct TodoRow: View {
     @Binding var item: TodoItem
     let number: Int
-    let isDragging: Bool
-    let dropLine: VerticalEdge?
     let onDrag: (CGFloat) -> Void
     let onDrop: () -> Void
-    let onHeight: (CGFloat) -> Void
     @State private var editing = false
     @State private var longPressed = false
     @FocusState private var titleFocused: Bool
@@ -257,28 +267,17 @@ struct TodoRow: View {
         .padding(.vertical, 2)
         .contentShape(Rectangle())
         .simultaneousGesture(dragGesture, including: editing ? .subviews : .all)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onHeight($0) }
-        .overlay {
-            if isDragging {
-                RoundedRectangle(cornerRadius: 6).stroke(Color.accentColor, lineWidth: 2)
-            }
-        }
-        .overlay(alignment: dropLine == .bottom ? .bottom : .top) {
-            if dropLine != nil {
-                Rectangle().fill(Color.accentColor).frame(height: 3)
-                    .offset(y: dropLine == .bottom ? 5 : -5)
-            }
-        }
-        .listRowBackground(
-            item.inProgress
-                ? RoundedRectangle(cornerRadius: 6).fill(Color.inProgress).padding(.horizontal, 4)
-                : nil
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(item.inProgress ? Color.inProgress : .clear)
+                .padding(.horizontal, -4)
+                .padding(.vertical, -2)
         )
     }
 
     private var dragGesture: some Gesture {
         LongPressGesture(minimumDuration: 0.35)
-            .sequenced(before: DragGesture(minimumDistance: 0))
+            .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .global))
             .onChanged { value in
                 if case .second(true, let drag) = value {
                     longPressed = true
