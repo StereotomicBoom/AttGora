@@ -197,10 +197,28 @@ struct TodoRow: View {
                 .frame(minWidth: 18, alignment: .trailing)
                 .contentShape(Rectangle())
                 .gesture(tapGesture)
-            Toggle("", isOn: $item.done)
-                .toggleStyle(.checkbox)
-                .controlSize(.large)
-                .labelsHidden()
+            Button {
+                item.done.toggle()
+            } label: {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(item.done ? Color.accentColor : Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .strokeBorder(item.done ? .clear : Color(white: 0.45), lineWidth: 1.5)
+                    )
+                    .overlay {
+                        if item.done {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .frame(width: 18, height: 18)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Klar")
+            .accessibilityValue(item.done ? "Ja" : "Nej")
             Button {
                 item.priority = (item.priority + 1) % Priority.allCases.count
             } label: {
