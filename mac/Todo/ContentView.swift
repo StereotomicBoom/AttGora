@@ -16,6 +16,13 @@ struct Rule: View {
     }
 }
 
+enum TextScale {
+    static let key = "textScale"
+    static func step(_ value: Double, by delta: Double) -> Double {
+        min(2.0, max(0.7, ((value + delta) * 10).rounded() / 10))
+    }
+}
+
 enum Filter: String, CaseIterable, Identifiable {
     case all = "Alla", active = "Kvar", done = "Klara"
     var id: Self { self }
@@ -25,6 +32,7 @@ struct ContentView: View {
     @ObservedObject var store: TodoStore
     @State private var newTitle = ""
     @State private var filter: Filter = .all
+    @AppStorage(TextScale.key) private var textScale = 1.0
     @FocusState private var newTaskFocused: Bool
     @State private var draggingID: UUID?
     @State private var dragSteps = 0
@@ -80,9 +88,9 @@ struct ContentView: View {
             HStack {
                 TextField("Ny uppgift", text: $newTitle)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 26))
+                    .font(.system(size: 26 * textScale))
                     .padding(.horizontal, 12)
-                    .frame(height: 57)
+                    .frame(height: 57 * textScale)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.paperLight)
@@ -168,12 +176,23 @@ struct ContentView: View {
                 Text("\(store.remaining) kvar")
                     .foregroundStyle(Color.muted)
                 Spacer()
+                Button { textScale = TextScale.step(textScale, by: -0.1) } label: {
+                    Image(systemName: "minus").frame(width: 14, height: 14)
+                }
+                .disabled(textScale <= 0.7)
+                .help("Mindre text (⌘−)")
+                Button { textScale = TextScale.step(textScale, by: 0.1) } label: {
+                    Image(systemName: "plus").frame(width: 14, height: 14)
+                }
+                .disabled(textScale >= 2.0)
+                .help("Större text (⌘+)")
+                Spacer()
                 Button("Rensa klara", action: store.clearCompleted)
                     .disabled(store.items.allSatisfy { !$0.done })
             }
             .padding()
         }
-        .font(.system(size: 17))
+        .font(.system(size: 17 * textScale))
         .background(Color.paper)
         .toolbarBackground(Color.paper, for: .windowToolbar)
         .toolbarBackground(.visible, for: .windowToolbar)
@@ -197,6 +216,7 @@ struct TodoRow: View {
     let onDrop: () -> Void
     @State private var editing = false
     @State private var longPressed = false
+    @AppStorage(TextScale.key) private var textScale = 1.0
     @FocusState private var titleFocused: Bool
 
     var body: some View {
@@ -204,7 +224,7 @@ struct TodoRow: View {
             Text("\(number).")
                 .monospacedDigit()
                 .foregroundStyle(Color.muted)
-                .frame(minWidth: 18, alignment: .trailing)
+                .frame(minWidth: 18 * textScale, alignment: .trailing)
                 .contentShape(Rectangle())
                 .gesture(tapGesture)
             Button {
@@ -219,11 +239,11 @@ struct TodoRow: View {
                     .overlay {
                         if item.done {
                             Image(systemName: "checkmark")
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.system(size: 11 * textScale, weight: .bold))
                                 .foregroundStyle(.white)
                         }
                     }
-                    .frame(width: 18, height: 18)
+                    .frame(width: 18 * textScale, height: 18 * textScale)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -238,7 +258,7 @@ struct TodoRow: View {
                         RoundedRectangle(cornerRadius: 3)
                             .strokeBorder(item.priority == 0 ? Color(white: 0.45) : .clear, lineWidth: 1.5)
                     )
-                    .frame(width: 18, height: 18)
+                    .frame(width: 18 * textScale, height: 18 * textScale)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
