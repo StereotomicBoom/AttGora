@@ -126,7 +126,9 @@ final class TodoStore: ObservableObject {
     func moveToTop(_ id: UUID) {
         guard let i = items.firstIndex(where: { $0.id == id }) else { return }
         var reordered = items
-        reordered.insert(reordered.remove(at: i), at: 0)
+        var item = reordered.remove(at: i)
+        item.done = false
+        reordered.insert(item, at: 0)
         items = reordered
     }
 
