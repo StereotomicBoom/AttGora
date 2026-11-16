@@ -44,7 +44,10 @@ enum Priority: Int, CaseIterable, Identifiable {
 final class TodoStore: ObservableObject {
     @Published var items: [TodoItem] = [] {
         didSet {
-            let ordered = (items.filter { !$0.done } + items.filter { $0.done }).map { item in
+            let wasDone = Set(oldValue.filter(\.done).map(\.id))
+            let unticked = Set(items.filter { !$0.done && wasDone.contains($0.id) }.map(\.id))
+            let open = items.filter { unticked.contains($0.id) } + items.filter { !$0.done && !unticked.contains($0.id) }
+            let ordered = (open + items.filter { $0.done }).map { item in
                 var item = item
                 if item.done {
                     item.inProgress = false
