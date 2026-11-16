@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 struct TodoItem: Codable, Identifiable, Equatable {
     var id = UUID()
@@ -7,6 +8,7 @@ struct TodoItem: Codable, Identifiable, Equatable {
     var created = Date()
     var priority = 0
     var inProgress = false
+    var alarm: Date?
 
     init(id: UUID = UUID(), title: String) {
         self.id = id
@@ -22,6 +24,7 @@ struct TodoItem: Codable, Identifiable, Equatable {
         let stored = try c.decodeIfPresent(Int.self, forKey: .priority) ?? 0
         priority = stored == 0 ? Priority.none.rawValue : Priority.medium.rawValue
         inProgress = try c.decodeIfPresent(Bool.self, forKey: .inProgress) ?? false
+        alarm = try c.decodeIfPresent(Date.self, forKey: .alarm)
     }
 }
 
@@ -43,11 +46,15 @@ final class TodoStore: ObservableObject {
         didSet {
             let ordered = (items.filter { !$0.done } + items.filter { $0.done }).map { item in
                 var item = item
-                if item.done { item.inProgress = false }
+                if item.done {
+                    item.inProgress = false
+                    item.alarm = nil
+                }
                 return item
             }
             if ordered != items { items = ordered }
             save()
+            Alarms.sync(items)
         }
     }
 
@@ -63,6 +70,7 @@ final class TodoStore: ObservableObject {
            let decoded = try? JSONDecoder().decode([TodoItem].self, from: data) {
             items = decoded.filter { !$0.done } + decoded.filter { $0.done }
         }
+        Alarms.sync(items)
     }
 
     var remaining: Int { items.filter { !$0.done }.count }
@@ -102,5 +110,26 @@ final class TodoStore: ObservableObject {
     private func save() {
         guard let data = try? JSONEncoder().encode(items) else { return }
         try? data.write(to: url, options: .atomic)
+    }
+}
+
+enum Alarms {
+    static func requestPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
+    static func sync(_ items: [TodoItem]) {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        for item in items {
+            guard let date = item.alarm, date > Date(), !item.done else { continue }
+            let content = UNMutableNotificationContent()
+            content.title = "Att göra"
+            content.body = item.title
+            content.sound = .default
+            let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
+            center.add(UNNotificationRequest(identifier: item.id.uuidString, content: content, trigger: trigger))
+        }
     }
 }

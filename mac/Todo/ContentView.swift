@@ -216,6 +216,7 @@ struct TodoRow: View {
     let onDrop: () -> Void
     @State private var editing = false
     @State private var longPressed = false
+    @State private var showAlarm = false
     @AppStorage(TextScale.key) private var textScale = 1.0
     @FocusState private var titleFocused: Bool
 
@@ -261,6 +262,32 @@ struct TodoRow: View {
             .buttonStyle(.plain)
             .opacity(item.done ? 0.4 : 1)
             .help("Prioritet: \(Priority(rawValue: item.priority)?.name ?? "Ingen") (klicka för att ändra)")
+            Button {
+                showAlarm = true
+            } label: {
+                TimelineView(.everyMinute) { _ in
+                    HStack(spacing: 3) {
+                        Image(systemName: "stopwatch")
+                            .font(.system(size: 16 * textScale))
+                        if let alarm = activeAlarm {
+                            Text(alarmLabel(alarm))
+                                .font(.system(size: 12 * textScale))
+                                .monospacedDigit()
+                        }
+                    }
+                    .foregroundStyle(activeAlarm != nil ? Color.accentColor : Color(white: 0.55))
+                }
+                .frame(minWidth: 20 * textScale, minHeight: 18 * textScale)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .opacity(item.done ? 0.4 : 1)
+            .disabled(item.done)
+            .help(activeAlarm.map { "Alarm: \($0.formatted(date: .abbreviated, time: .shortened))" } ?? "Sätt alarm")
+            .accessibilityLabel("Alarm")
+            .popover(isPresented: $showAlarm, arrowEdge: .bottom) {
+                AlarmEditor(item: $item) { showAlarm = false }
+            }
             if editing {
                 TextField("Uppgift", text: $item.title)
                     .textFieldStyle(.plain)
@@ -315,6 +342,17 @@ struct TodoRow: View {
             })
     }
 
+    private var activeAlarm: Date? {
+        guard let alarm = item.alarm, alarm > Date() else { return nil }
+        return alarm
+    }
+
+    private func alarmLabel(_ date: Date) -> String {
+        Calendar.current.isDateInToday(date)
+            ? date.formatted(date: .omitted, time: .shortened)
+            : date.formatted(.dateTime.day().month(.abbreviated).hour().minute())
+    }
+
     private var titleColor: Color {
         item.done ? .doneText : .primary
     }
@@ -324,5 +362,57 @@ struct TodoRow: View {
         case .none: Color(white: 0.55)
         case .medium: Color(red: 1.0, green: 0.69, blue: 0.30)
         }
+    }
+}
+
+struct AlarmEditor: View {
+    @Binding var item: TodoItem
+    let close: () -> Void
+    @State private var date: Date
+
+    init(item: Binding<TodoItem>, close: @escaping () -> Void) {
+        _item = item
+        self.close = close
+        let soon = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
+        _date = State(initialValue: item.wrappedValue.alarm.flatMap { $0 > Date() ? $0 : nil } ?? soon)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Alarm").font(.headline)
+            Text(item.title)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            DatePicker("Tid", selection: $date, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                .labelsHidden()
+            HStack {
+                Button("+15 min") { date = Date().addingTimeInterval(15 * 60) }
+                Button("+1 h") { date = Date().addingTimeInterval(60 * 60) }
+                Button("I morgon 09:00") {
+                    let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+                    date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+                }
+            }
+            HStack {
+                if item.alarm != nil {
+                    Button("Ta bort", role: .destructive) {
+                        item.alarm = nil
+                        close()
+                    }
+                }
+                Spacer()
+                Button("Avbryt", action: close)
+                    .keyboardShortcut(.cancelAction)
+                Button("Sätt alarm") {
+                    Alarms.requestPermission()
+                    item.alarm = date
+                    close()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .font(.system(size: 13))
+        .padding()
+        .frame(width: 340)
     }
 }
