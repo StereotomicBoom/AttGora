@@ -132,7 +132,8 @@ struct ContentView: View {
                                     dragOffset = dy
                                     dragSteps = Int((dy / rowHeight).rounded())
                                 },
-                                onDrop: finishDrag
+                                onDrop: finishDrag,
+                                onMoveToTop: { store.moveToTop(id) }
                             )
                             .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 8))
                             Rule().padding(.leading, 4)
@@ -214,6 +215,7 @@ struct TodoRow: View {
     let number: Int
     let onDrag: (CGFloat) -> Void
     let onDrop: () -> Void
+    let onMoveToTop: () -> Void
     @State private var editing = false
     @State private var longPressed = false
     @State private var showAlarm = false
@@ -227,7 +229,7 @@ struct TodoRow: View {
                 .foregroundStyle(Color.muted)
                 .frame(minWidth: 18 * textScale, alignment: .trailing)
                 .contentShape(Rectangle())
-                .gesture(tapGesture)
+                .gesture(outsideTapGesture)
             Button {
                 item.done.toggle()
             } label: {
@@ -302,10 +304,15 @@ struct TodoRow: View {
                     .strikethrough(item.done)
                     .italic(item.done)
                     .foregroundStyle(titleColor)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(1)
                     .contentShape(Rectangle())
                     .gesture(tapGesture)
                     .help(item.done ? "" : "Klicka: pågår av/på · Håll in och dra: flytta · Dubbelklicka: ändra text")
+                Color.clear
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .gesture(outsideTapGesture)
+                    .help("Dubbelklicka: flytta överst")
             }
         }
         .padding(.vertical, 2)
@@ -332,6 +339,14 @@ struct TodoRow: View {
                 onDrop()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { longPressed = false }
             }
+    }
+
+    private var outsideTapGesture: some Gesture {
+        TapGesture(count: 2).onEnded { onMoveToTop() }
+            .exclusively(before: TapGesture().onEnded {
+                guard !longPressed else { return }
+                if !item.done { item.inProgress.toggle() }
+            })
     }
 
     private var tapGesture: some Gesture {

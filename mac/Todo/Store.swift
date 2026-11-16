@@ -123,6 +123,13 @@ final class TodoStore: ObservableObject {
         items = items.map { visibleSet.contains($0.id) ? byId[next.next()!]! : $0 }
     }
 
+    func moveToTop(_ id: UUID) {
+        guard let i = items.firstIndex(where: { $0.id == id }) else { return }
+        var reordered = items
+        reordered.insert(reordered.remove(at: i), at: 0)
+        items = reordered
+    }
+
     func delete(_ ids: Set<UUID>) {
         items.removeAll { ids.contains($0.id) }
     }
