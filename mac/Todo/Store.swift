@@ -19,21 +19,20 @@ struct TodoItem: Codable, Identifiable, Equatable {
         title = try c.decode(String.self, forKey: .title)
         done = try c.decodeIfPresent(Bool.self, forKey: .done) ?? false
         created = try c.decodeIfPresent(Date.self, forKey: .created) ?? Date()
-        priority = try c.decodeIfPresent(Int.self, forKey: .priority) ?? 0
+        let stored = try c.decodeIfPresent(Int.self, forKey: .priority) ?? 0
+        priority = stored == 0 ? Priority.none.rawValue : Priority.medium.rawValue
         inProgress = try c.decodeIfPresent(Bool.self, forKey: .inProgress) ?? false
     }
 }
 
 enum Priority: Int, CaseIterable, Identifiable {
-    case none, low, medium, high
+    case none = 0, medium = 2
     var id: Int { rawValue }
 
     var name: String {
         switch self {
         case .none: "Ingen"
-        case .low: "Låg"
         case .medium: "Medel"
-        case .high: "Hög"
         }
     }
 }

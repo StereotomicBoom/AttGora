@@ -250,7 +250,7 @@ struct TodoRow: View {
             .accessibilityLabel("Klar")
             .accessibilityValue(item.done ? "Ja" : "Nej")
             Button {
-                item.priority = (item.priority + 1) % Priority.allCases.count
+                item.priority = item.priority == 0 ? Priority.medium.rawValue : Priority.none.rawValue
             } label: {
                 Image(systemName: item.priority == 0 ? "star" : "star.fill")
                     .font(.system(size: 17 * textScale))
@@ -322,9 +322,7 @@ struct TodoRow: View {
     private var priorityColor: Color {
         switch Priority(rawValue: item.priority) ?? .none {
         case .none: Color(white: 0.55)
-        case .low: Color(red: 0.42, green: 0.78, blue: 0.48)
         case .medium: Color(red: 1.0, green: 0.69, blue: 0.30)
-        case .high: Color(red: 0.95, green: 0.45, blue: 0.45)
         }
     }
 }
