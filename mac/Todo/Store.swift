@@ -88,10 +88,10 @@ final class TodoStore: ObservableObject {
         alert.messageText = "Alarm"
         alert.informativeText = due.title
         alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Snooza 10 min")
+        alert.addButton(withTitle: "Snooza 5 min")
         let response = alert.runModal()
         if var item = item(due.id) {
-            item.alarm = response == .alertSecondButtonReturn ? Date().addingTimeInterval(10 * 60) : nil
+            item.alarm = response == .alertSecondButtonReturn ? Date().addingTimeInterval(5 * 60) : nil
             update(item)
         }
         alarmShowing = false
