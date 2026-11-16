@@ -227,7 +227,8 @@ struct TodoRow: View {
             Text("\(number).")
                 .monospacedDigit()
                 .foregroundStyle(Color.muted)
-                .frame(minWidth: 18 * textScale, alignment: .trailing)
+                .fixedSize()
+                .frame(minWidth: 28 * textScale, alignment: .trailing)
                 .contentShape(Rectangle())
                 .gesture(outsideTapGesture)
             Button {
