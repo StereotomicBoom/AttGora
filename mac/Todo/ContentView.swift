@@ -252,13 +252,10 @@ struct TodoRow: View {
             Button {
                 item.priority = (item.priority + 1) % Priority.allCases.count
             } label: {
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(priorityColor)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 3)
-                            .strokeBorder(item.priority == 0 ? Color(white: 0.45) : .clear, lineWidth: 1.5)
-                    )
-                    .frame(width: 18 * textScale, height: 18 * textScale)
+                Image(systemName: item.priority == 0 ? "star" : "star.fill")
+                    .font(.system(size: 17 * textScale))
+                    .foregroundStyle(priorityColor)
+                    .frame(width: 20 * textScale, height: 18 * textScale)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -324,10 +321,10 @@ struct TodoRow: View {
 
     private var priorityColor: Color {
         switch Priority(rawValue: item.priority) ?? .none {
-        case .none: .clear
-        case .low: Color(red: 0.13, green: 0.58, blue: 0.24)
-        case .medium: Color(red: 0.90, green: 0.45, blue: 0.0)
-        case .high: Color(red: 0.82, green: 0.11, blue: 0.11)
+        case .none: Color(white: 0.55)
+        case .low: Color(red: 0.42, green: 0.78, blue: 0.48)
+        case .medium: Color(red: 1.0, green: 0.69, blue: 0.30)
+        case .high: Color(red: 0.95, green: 0.45, blue: 0.45)
         }
     }
 }
