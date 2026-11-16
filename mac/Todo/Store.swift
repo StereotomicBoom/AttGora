@@ -44,13 +44,18 @@ enum Priority: Int, CaseIterable, Identifiable {
 final class TodoStore: ObservableObject {
     @Published var items: [TodoItem] = [] {
         didSet {
-            let ordered = (items.filter { !$0.done } + items.filter { $0.done }).map { item in
+            let wasDone = Set(oldValue.filter(\.done).map(\.id))
+            let newlyDone = Set(items.filter { $0.done && !wasDone.contains($0.id) }.map(\.id))
+            var ordered = items.map { item in
                 var item = item
                 if item.done {
                     item.inProgress = false
                     item.alarm = nil
                 }
                 return item
+            }
+            if !newlyDone.isEmpty {
+                ordered = ordered.filter { newlyDone.contains($0.id) } + ordered.filter { !newlyDone.contains($0.id) }
             }
             if ordered != items { items = ordered }
             save()
@@ -67,7 +72,7 @@ final class TodoStore: ObservableObject {
     init() {
         if let data = try? Data(contentsOf: url),
            let decoded = try? JSONDecoder().decode([TodoItem].self, from: data) {
-            items = decoded.filter { !$0.done } + decoded.filter { $0.done }
+            items = decoded
         }
         Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.checkAlarms() }
