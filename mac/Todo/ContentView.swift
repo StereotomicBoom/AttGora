@@ -399,15 +399,11 @@ struct AlarmEditor: View {
             Text(item.title)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-            DatePicker("Tid", selection: $date, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+            DatePicker("Tid", selection: $date, displayedComponents: [.hourAndMinute])
                 .labelsHidden()
             HStack {
                 Button("+15 min") { date = Date().addingTimeInterval(15 * 60) }
                 Button("+1 h") { date = Date().addingTimeInterval(60 * 60) }
-                Button("I morgon 09:00") {
-                    let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-                    date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow) ?? tomorrow
-                }
             }
             HStack {
                 if item.alarm != nil {
@@ -420,7 +416,7 @@ struct AlarmEditor: View {
                 Button("Avbryt", action: close)
                     .keyboardShortcut(.cancelAction)
                 Button("Sätt alarm") {
-                    item.alarm = date
+                    item.alarm = nextOccurrence(of: date)
                     close()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -429,5 +425,13 @@ struct AlarmEditor: View {
         .font(.system(size: 13))
         .padding()
         .frame(width: 340)
+    }
+
+    private func nextOccurrence(of time: Date) -> Date {
+        let cal = Calendar.current
+        let parts = cal.dateComponents([.hour, .minute], from: time)
+        let now = Date()
+        let today = cal.date(bySettingHour: parts.hour ?? 0, minute: parts.minute ?? 0, second: 0, of: now) ?? time
+        return today > now ? today : cal.date(byAdding: .day, value: 1, to: today) ?? today
     }
 }
