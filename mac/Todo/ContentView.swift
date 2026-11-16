@@ -404,7 +404,6 @@ struct AlarmEditor: View {
                 Button("Avbryt", action: close)
                     .keyboardShortcut(.cancelAction)
                 Button("Sätt alarm") {
-                    Alarms.requestPermission()
                     item.alarm = date
                     close()
                 }

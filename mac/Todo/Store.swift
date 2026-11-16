@@ -1,5 +1,5 @@
 import SwiftUI
-import UserNotifications
+import AppKit
 
 struct TodoItem: Codable, Identifiable, Equatable {
     var id = UUID()
@@ -54,7 +54,6 @@ final class TodoStore: ObservableObject {
             }
             if ordered != items { items = ordered }
             save()
-            Alarms.sync(items)
         }
     }
 
@@ -70,7 +69,32 @@ final class TodoStore: ObservableObject {
            let decoded = try? JSONDecoder().decode([TodoItem].self, from: data) {
             items = decoded.filter { !$0.done } + decoded.filter { $0.done }
         }
-        Alarms.sync(items)
+        Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.checkAlarms() }
+        }
+        Task { @MainActor in self.checkAlarms() }
+    }
+
+    private var alarmShowing = false
+
+    private func checkAlarms() {
+        guard !alarmShowing,
+              let due = items.first(where: { !$0.done && ($0.alarm ?? .distantFuture) <= Date() })
+        else { return }
+        alarmShowing = true
+        NSSound(named: "Glass")?.play()
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Alarm"
+        alert.informativeText = due.title
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Snooza 10 min")
+        let response = alert.runModal()
+        if var item = item(due.id) {
+            item.alarm = response == .alertSecondButtonReturn ? Date().addingTimeInterval(10 * 60) : nil
+            update(item)
+        }
+        alarmShowing = false
     }
 
     var remaining: Int { items.filter { !$0.done }.count }
@@ -113,23 +137,3 @@ final class TodoStore: ObservableObject {
     }
 }
 
-enum Alarms {
-    static func requestPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
-    }
-
-    static func sync(_ items: [TodoItem]) {
-        let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests()
-        for item in items {
-            guard let date = item.alarm, date > Date(), !item.done else { continue }
-            let content = UNMutableNotificationContent()
-            content.title = "Att göra"
-            content.body = item.title
-            content.sound = .default
-            let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
-            let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
-            center.add(UNNotificationRequest(identifier: item.id.uuidString, content: content, trigger: trigger))
-        }
-    }
-}
