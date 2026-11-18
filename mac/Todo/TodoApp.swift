@@ -2,6 +2,10 @@ import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        UpdateChecker.check()
+    }
 }
 
 @main
@@ -17,6 +21,9 @@ struct TodoApp: App {
         }
         .defaultSize(width: 440, height: 560)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Sök efter uppdateringar…") { UpdateChecker.check(manual: true) }
+            }
             CommandGroup(replacing: .newItem) {
                 Button("Ny uppgift") {
                     NotificationCenter.default.post(name: .focusNewTask, object: nil)

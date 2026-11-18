@@ -23,6 +23,7 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 |---|---|
 | Build and install the app | `./bygg.sh` (quits the running app, replaces `~/Applications/Todo.app` and recreates the Desktop shortcut) |
 | Redraw the icon | Edit `mac/make-icon.swift` and run `./bygg.sh` |
+| Share a new version | Bump `VERSION`, commit, then run `./bygg.sh release` (builds, pushes and publishes a GitHub Release with the zip) |
 | Uninstall | Double-click `Avinstallera Todo.command` (asks separately before deleting your tasks) |
 
 ## Files
@@ -31,9 +32,12 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 |---|---|
 | `mac/Todo/TodoApp.swift` | App entry point, window and the "Ny uppgift" menu command |
 | `mac/Todo/ContentView.swift` | The window: input field, filter, list, footer |
+| `mac/Todo/UpdateChecker.swift` | At launch (and via "Sök efter uppdateringar…") asks GitHub for the latest release and offers the download if it is newer |
 | `mac/Todo/Store.swift` | `TodoItem` and `TodoStore`: loads and saves the tasks |
 | `mac/make-icon.swift` | Draws the icon (white checkmark on blue) |
 | `mac/set-icon.swift` | Sets the square-cornered Finder icon |
+| `VERSION` | Version number, written into the app and used as the release tag (`v1.0`) |
+| `delning/` | Install guide included in the share package `~/Applications/Todo för Mac.zip` |
 | `mac/build/` | Build output (not in git) |
 
 ## Data
