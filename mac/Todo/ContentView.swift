@@ -304,7 +304,7 @@ struct TodoRow: View {
                         .onChange(of: titleFocused) { _, focused in
                             if !focused { editing = false }
                         }
-                        .onAppear { titleFocused = true }
+                        .onAppear { focusTitle(retries: 2) }
                 } else {
                     Text(item.title)
                         .strikethrough(item.done)
@@ -394,6 +394,14 @@ struct TodoRow: View {
         }
         guard let line = lines.first(where: { point.y < $0.maxY }) ?? lines.last else { return true }
         return point.x <= line.maxX + 4
+    }
+
+    private func focusTitle(retries: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            guard editing, !titleFocused else { return }
+            titleFocused = true
+            if retries > 0 { focusTitle(retries: retries - 1) }
+        }
     }
 
     private func endEditingIfOutside(_ event: NSEvent) {
