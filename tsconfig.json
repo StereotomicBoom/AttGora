@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "types": [],
+    "strict": true,
+    "noImplicitAny": false,
+    "rootDir": "web",
+    "outDir": "mac/build/web",
+    "skipLibCheck": true
+  },
+  "files": ["web/types.d.ts", "web/native.ts", "web/store.ts", "web/alarm.ts", "web/app.ts"]
+}

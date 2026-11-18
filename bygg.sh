@@ -18,8 +18,11 @@ if [ "${1:-}" = "release" ]; then
 fi
 
 echo "Bygger appen (version $VERSION)…"
+command -v npm >/dev/null || { echo "Node.js saknas. Installera det från https://nodejs.org och kör igen."; exit 1; }
+[ -d "$PROJECT/node_modules" ] || (cd "$PROJECT" && npm install --no-audit --no-fund)
+(cd "$PROJECT" && npm run -s build)
 for arch in arm64 x86_64; do
-  swiftc -O -parse-as-library -target "$arch-apple-macos14.0" -o "$BUILD/$NAME-$arch" "$PROJECT"/mac/Todo/*.swift
+  swiftc -O -target "$arch-apple-macos14.0" -o "$BUILD/$NAME-$arch" "$PROJECT/mac/src/main.swift" -framework Cocoa -framework WebKit
 done
 lipo -create -output "$BUILD/$NAME" "$BUILD/$NAME-arm64" "$BUILD/$NAME-x86_64"
 
@@ -44,6 +47,7 @@ rm -rf "$STAGE"
 mkdir -p "$STAGE/Contents/MacOS" "$STAGE/Contents/Resources"
 cp "$BUILD/$NAME" "$STAGE/Contents/MacOS/$NAME"
 cp "$BUILD/AppIcon.icns" "$STAGE/Contents/Resources/AppIcon.icns"
+cp -R "$BUILD/web" "$STAGE/Contents/Resources/web"
 cat > "$STAGE/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

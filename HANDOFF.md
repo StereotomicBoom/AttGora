@@ -1,6 +1,6 @@
 # Todo: handoff
 
-Written 2026-11-11 for whoever picks this app up next, person or AI session. **[README.md](README.md)** is the user guide. This file covers the current state and traps.
+Written 2026-11-11, updated 2026-11-18, for whoever picks this app up next, person or AI session. **[README.md](README.md)** is the user guide. This file covers the current state and traps.
 
 ## Where things are
 
@@ -12,16 +12,19 @@ Written 2026-11-11 for whoever picks this app up next, person or AI session. **[
 | Bundle id | `se.gustavlundstrom.todo` |
 | Build and install | `./bygg.sh` |
 
-## State as of 2026-11-11
+## State as of 2026-11-18 (version 2.0)
 
-Add, edit, complete, delete, filter, clear completed, ⌘N, drag to reorder, completed tasks kept at the bottom, a larger "Ny uppgift" field, a 4-grade priority colour per task (`priority` 0–3, see `Priority` in Store.swift; label only, no sorting). An "in progress" flag (`inProgress`): single click on the text toggles it (light blue `listRowBackground`, `Color.inProgress`), double-click edits the title (`TodoRow.editing`); the store clears it when a task is done. White theme (was warm paper white; names kept): colours are `Color.paper`, `.paperLight`, `.paperEdge` (input border), `.rule` (dividers) and `.muted` (counts, empty message), `.doneText` (finished tasks: also struck through, italic, priority square at 40%) at the top of ContentView.swift; `.preferredColorScheme(.light)` forces light mode. The row selection highlight is still the system accent colour. Built with plain `swiftc -parse-as-library` (no Xcode project, no SwiftPM).
+Rewritten from SwiftUI to TypeScript. The page in `web/` (compiled by `tsc` into `mac/build/web/`) runs in a `WKWebView` inside a small Swift shell, `mac/src/main.swift`, the same set-up as JobbbAppp. The page talks to the shell through one message handler, `native`, with commands `load`, `save`, `getScale`, `setScale`, `version`, `open`, `dialog` and `menu` (see `web/native.ts`). The shell calls back into the page through `window.todo` (⌘N, text size, update check, alarm result).
+
+Features: add (after the last starred task), edit (double-click the text), in progress (single click), star, alarm with a custom clock, drag to reorder (press and hold), double-click blank space to move to top, filter, clear completed, text size, update check against GitHub Releases.
 
 ## Traps
 
-- `TodoItem` has a hand-written `init(from:)` using `decodeIfPresent`, so older `todos.json` files without newer fields still load. Add new fields there too.
-- **No SwiftData.** Storage is a Codable JSON file, chosen because SwiftData macros don't build reliably with plain `swiftc`. Changing `TodoItem`'s fields breaks decoding of existing data unless new fields are optional or have defaults handled in a custom decoder; a failed decode starts with an empty list and the next save overwrites the file.
-- `TodoStore.items`'s `didSet` re-sorts unfinished before finished (stable), so any mutation can reorder the array. Rows are addressed by id, not index, for that reason. `move(visible:from:to:)` reorders only the slots of the currently visible ids.
-- `TodoStore.items` saves on every `didSet`, including each keystroke while editing a task. Fine for small lists.
+- `todos.json` keeps the format of the Swift version: dates are seconds since 2001-01-01 (Apple's reference date), not Unix time. Use `toRef`/`fromRef` in `web/native.ts`. Old files load fine.
+- Alarms are checked by the shell every 5 seconds, not by the page, so they ring even when the window is closed (closing only hides it). The shell keeps its own copy of the items from the last `save`.
+- `Store.set` re-sorts after every change: unticked tasks first, then open tasks, then done tasks; a done task loses its alarm and "in progress". Rows are addressed by id, never by index.
+- A single click waits about 0.3 s before toggling "in progress", so a double-click can cancel it.
+- Background clicks from automation tools land unreliably in the web view. Test interactions by serving `mac/build/web` with a mocked `window.webkit` bridge in a browser instead. `TODO_DATA_DIR` points the app at a separate data folder for testing.
 - The uninstaller started as a copy of a script shared with other apps; this copy only knows about Todo.
 
 ## Ideas not done

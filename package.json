@@ -1,0 +1,11 @@
+{
+  "name": "todo",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf mac/build/web && tsc -p tsconfig.json && cp web/index.html web/app.css mac/build/web/",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <title>Att göra</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header>
+    <div class="new-row">
+      <input id="new-title" placeholder="Ny uppgift" autocomplete="off" spellcheck="false">
+      <button id="add" class="btn large">Lägg till</button>
+    </div>
+    <div class="segmented">
+      <button data-filter="all">Alla</button>
+      <button data-filter="active">Kvar</button>
+      <button data-filter="done">Klara</button>
+    </div>
+  </header>
+  <div class="rule"></div>
+  <main>
+    <div id="list"></div>
+    <div id="empty" hidden></div>
+  </main>
+  <div class="rule"></div>
+  <footer>
+    <span id="remaining"></span>
+    <span class="spacer"></span>
+    <button id="smaller" class="btn icon" title="Mindre text (⌘−)"></button>
+    <button id="bigger" class="btn icon" title="Större text (⌘+)"></button>
+    <span class="spacer"></span>
+    <button id="clear-done" class="btn">Rensa klara</button>
+  </footer>
+  <script src="native.js"></script>
+  <script src="store.js"></script>
+  <script src="alarm.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
