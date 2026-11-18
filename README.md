@@ -1,8 +1,8 @@
-# Todo
+# AttGöra
 
 A simple Mac to-do app (Swedish interface). The app itself is written in TypeScript (`web/`); a small Swift shell (`mac/src/main.swift`) shows it in a native window.
 
-This folder is the **master copy**. Make changes here and run `./bygg.sh`. The app in `~/Applications/Todo.app` is always built from this folder. Never edit the installed app bundle.
+This folder is the **master copy**. Make changes here and run `./bygg.sh`. The app in `~/Applications/AttGöra.app` is always built from this folder. Never edit the installed app bundle.
 
 The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOFF.md).
 
@@ -23,11 +23,11 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 
 | To … | Do this |
 |---|---|
-| Build and install the app | `./bygg.sh` (quits the running app, replaces `~/Applications/Todo.app` and recreates the Desktop shortcut). Needs Node.js. |
+| Build and install the app | `./bygg.sh` (quits the running app, replaces `~/Applications/AttGöra.app` and recreates the Desktop shortcut). Needs Node.js. |
 | Check the TypeScript without building | `npm run typecheck` |
 | Redraw the icon | Edit `mac/make-icon.swift` and run `./bygg.sh` |
 | Share a new version | Bump `VERSION`, commit, then run `./bygg.sh release` (builds, pushes and publishes a GitHub Release with the zip) |
-| Uninstall | Double-click `Avinstallera Todo.command` (asks separately before deleting your tasks) |
+| Uninstall | Double-click `Avinstallera AttGöra.command` (asks separately before deleting your tasks) |
 
 ## Files
 
@@ -42,9 +42,9 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 | `mac/make-icon.swift` | Draws the icon (white checkmark on blue) |
 | `mac/set-icon.swift` | Sets the square-cornered Finder icon |
 | `VERSION` | Version number, written into the app and used as the release tag (`v1.0`) |
-| `delning/` | Install guide included in the share package `~/Applications/Todo för Mac.zip` |
+| `delning/` | Install guide included in the share package `~/Applications/AttGöra för Mac.zip` |
 | `mac/build/` | Build output (not in git) |
 
 ## Data
 
-Tasks are saved as JSON in `~/Library/Application Support/Todo/todos.json`, written on every change.
+Tasks are saved as JSON in `~/Library/Application Support/Todo/todos.json`, written on every change. The folder keeps the app's old name, Todo, so tasks survived the rename.

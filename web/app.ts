@@ -1,5 +1,5 @@
 const store = new Store();
-const REPO = "StereotomicBoom/Todo";
+const REPO = "StereotomicBoom/AttGora";
 
 type Filter = "all" | "active" | "done";
 let filter: Filter = "all";
@@ -262,10 +262,10 @@ async function checkForUpdates(manual: boolean) {
   }
   const latest = release.tag_name.replace(/^v/i, "");
   if (!isNewer(latest, current)) {
-    if (manual) native("dialog", { title: "Todo är uppdaterad", text: `Du har den senaste versionen (${current}).` });
+    if (manual) native("dialog", { title: "AttGöra är uppdaterad", text: `Du har den senaste versionen (${current}).` });
     return;
   }
-  const choice = await native("dialog", { title: "Ny version av Todo", text: `Version ${latest} finns. Du har ${current}.`, buttons: ["Ladda ner", "Senare"] });
+  const choice = await native("dialog", { title: "Ny version av AttGöra", text: `Version ${latest} finns. Du har ${current}.`, buttons: ["Ladda ner", "Senare"] });
   if (choice === 0) native("open", { url: release.html_url });
 }
 

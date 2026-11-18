@@ -1,5 +1,5 @@
-TODO – app för Mac
-==================
+ATTGÖRA – app för Mac
+=====================
 
 En enkel att göra-lista. Uppgifterna sparas bara på din egen Mac.
 
@@ -7,14 +7,14 @@ Kräver: macOS 14 (Sonoma) eller senare. Fungerar på Mac med Apple-chip och Int
 
 
 INSTALLERA
-1. Dra "Todo.app" till mappen Program (Applications).
+1. Dra "AttGöra.app" till mappen Program (Applications).
 2. Dubbelklicka på den.
 
 Första gången säger macOS att appen inte kan verifieras, eftersom den
 inte är registrerad hos Apple. Det är väntat. Så här tillåter du den:
 3. Klicka på "Klar" (eller "OK") i meddelandet.
 4. Öppna Systeminställningar > Integritet och säkerhet.
-5. Skrolla ner till meddelandet om "Todo" och klicka på "Öppna ändå".
+5. Skrolla ner till meddelandet om "AttGöra" och klicka på "Öppna ändå".
 6. Ange lösenordet till din Mac och klicka på "Öppna ändå" en gång till.
 
 Sedan öppnas appen som vanligt med ett dubbelklick. Dra den gärna till Dock.
@@ -22,10 +22,10 @@ Sedan öppnas appen som vanligt med ett dubbelklick. Dra den gärna till Dock.
 
 UPPDATERA
 När det finns en ny version säger appen till när den startar. Klicka på
-"Ladda ner", packa upp zip-filen och ersätt den gamla Todo.app i Program
+"Ladda ner", packa upp zip-filen och ersätt den gamla AttGöra.app (eller Todo.app) i Program
 med den nya. Dina uppgifter ligger kvar. Steg 3–6 ovan kan behövas igen.
 
 
 AVINSTALLERA
-Dra Todo från Program till Papperskorgen. Vill du även ta bort dina
+Dra AttGöra från Program till Papperskorgen. Vill du även ta bort dina
 uppgifter raderar du mappen ~/Library/Application Support/Todo

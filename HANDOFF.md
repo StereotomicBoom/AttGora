@@ -1,4 +1,4 @@
-# Todo: handoff
+# AttGöra: handoff
 
 Written 2026-11-11, updated 2026-11-18, for whoever picks this app up next, person or AI session. **[README.md](README.md)** is the user guide. This file covers the current state and traps.
 
@@ -6,8 +6,8 @@ Written 2026-11-11, updated 2026-11-18, for whoever picks this app up next, pers
 
 | What | Where |
 |---|---|
-| Source (the only copy; edit only here) | `~/Applications/Todo-källkod/` |
-| Installed app | `~/Applications/Todo.app`, with a symlink on the Desktop |
+| Source (the only copy; edit only here) | `~/Applications/AttGöra-källkod/` |
+| Installed app | `~/Applications/AttGöra.app`, with a symlink on the Desktop |
 | User data (real, never test against it) | `~/Library/Application Support/Todo/todos.json` |
 | Bundle id | `se.gustavlundstrom.todo` |
 | Build and install | `./bygg.sh` |
@@ -25,7 +25,8 @@ Features: add (after the last starred task), edit (double-click the text), in pr
 - `Store.set` re-sorts after every change: unticked tasks first, then open tasks, then done tasks; a done task loses its alarm and "in progress". Rows are addressed by id, never by index.
 - A single click waits about 0.3 s before toggling "in progress", so a double-click can cancel it.
 - Background clicks from automation tools land unreliably in the web view. Test interactions by serving `mac/build/web` with a mocked `window.webkit` bridge in a browser instead. `TODO_DATA_DIR` points the app at a separate data folder for testing.
-- The uninstaller started as a copy of a script shared with other apps; this copy only knows about Todo.
+- The app was called Todo until 2.1.0. The bundle id (`se.gustavlundstrom.todo`), the data folder (`Application Support/Todo`) and the `TodoItem` type keep the old name on purpose, so existing tasks and settings carry over. The executable is `AttGora` (no ö) so `pgrep`/`pkill` match it reliably. The GitHub repo is `StereotomicBoom/AttGora`; GitHub redirects the old `Todo` URLs.
+- The uninstaller started as a copy of a script shared with other apps; this copy only knows about AttGöra.
 
 ## Ideas not done
 

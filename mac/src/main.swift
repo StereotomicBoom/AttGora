@@ -196,13 +196,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
             let menu = NSMenu(title: title); build(menu); item.submenu = menu
             return menu
         }
-        _ = add("Todo") { m in
-            m.addItem(withTitle: "Om Todo", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        _ = add("AttGöra") { m in
+            m.addItem(withTitle: "Om AttGöra", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
             m.addItem(withTitle: "Sök efter uppdateringar…", action: #selector(checkUpdates(_:)), keyEquivalent: "")
             m.addItem(.separator())
-            m.addItem(withTitle: "Göm Todo", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+            m.addItem(withTitle: "Göm AttGöra", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
             m.addItem(.separator())
-            m.addItem(withTitle: "Avsluta Todo", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+            m.addItem(withTitle: "Avsluta AttGöra", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         }
         _ = add("Arkiv") { m in
             m.addItem(withTitle: "Ny uppgift", action: #selector(newTask(_:)), keyEquivalent: "n")

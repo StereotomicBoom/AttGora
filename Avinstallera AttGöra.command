@@ -1,7 +1,7 @@
 #!/bin/bash
-# avinstallera.sh – tar bort Todo och alla spår av den.
+# avinstallera.sh – tar bort AttGöra och alla spår av den.
 #
-#   ./avinstallera.sh [todo] [--dry-run] [--delete-data] [--no-backup] [--yes]
+#   ./avinstallera.sh [attgora] [--dry-run] [--delete-data] [--no-backup] [--yes]
 #
 #   --dry-run       visar bara vad som skulle tas bort, ändrar ingenting
 #   --delete-data   tar även bort dina uppgifter (todos.json)
@@ -17,25 +17,27 @@
 if [ -z "${AVINST_COPY:-}" ]; then
   T="$(mktemp /tmp/avinstallera.XXXXXX)"; cp "$0" "$T"; AVINST_COPY=1 exec bash "$T" "$@"
 fi
-DEFAULT_APP="todo"
+DEFAULT_APP="attgora"
 LIB="$HOME/Library"
 APPS="$HOME/Applications"
 DRY=0; DELDATA=0; BACKUP=1; YES=0; GENERIC=0
 NAME=""; BUNDLES=(); DATADIRS=(); EXTRAS=(); SOURCE=""; PROCS=()
 
 list() {
-  echo "todo"
+  echo "attgora"
 }
 
 # ---- appens definition ----
 define() {
   case "$1" in
-    todo)
-      NAME="Todo"; BUNDLES=(se.gustavlundstrom.todo)
-      PROCS=(Todo)
+    attgora)
+      NAME="AttGöra"; BUNDLES=(se.gustavlundstrom.todo)
+      PROCS=(AttGora Todo)
       DATADIRS=("$LIB/Application Support/Todo")             # todos.json
-      SOURCE="$APPS/Todo-källkod"
-      EXTRAS=("$APPS/Todo för Mac" "$APPS/Todo för Mac.zip") ;;
+      SOURCE="$APPS/AttGöra-källkod"
+      EXTRAS=("$APPS/AttGöra för Mac" "$APPS/AttGöra för Mac.zip"
+              "$APPS/Todo.app" "$HOME/Desktop/Todo.app" "$APPS/Todo-källkod"
+              "$APPS/Todo för Mac" "$APPS/Todo för Mac.zip") ;;
     *) return 1 ;;
   esac
 }
