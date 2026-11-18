@@ -105,7 +105,8 @@ final class TodoStore: ObservableObject {
     func add(_ title: String) {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        items.insert(TodoItem(title: trimmed), at: 0)
+        let lastStarred = items.lastIndex { !$0.done && $0.priority != Priority.none.rawValue }
+        items.insert(TodoItem(title: trimmed), at: lastStarred.map { $0 + 1 } ?? 0)
     }
 
     func item(_ id: UUID) -> TodoItem? {
