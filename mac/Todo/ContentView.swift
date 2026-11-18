@@ -397,10 +397,8 @@ struct TodoRow: View {
     }
 
     private func endEditingIfOutside(_ event: NSEvent) {
-        guard let window = event.window,
-              let editor = window.firstResponder as? NSTextView,
-              let hit = window.contentView?.hitTest(window.contentView!.convert(event.locationInWindow, from: nil)),
-              hit === editor || hit.isDescendant(of: editor) == true
+        guard let editor = event.window?.firstResponder as? NSTextView,
+              editor.convert(editor.visibleRect, to: nil).contains(event.locationInWindow)
         else {
             editing = false
             return
