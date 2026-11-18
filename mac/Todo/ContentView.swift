@@ -219,6 +219,9 @@ struct TodoRow: View {
     @State private var editing = false
     @State private var longPressed = false
     @State private var showAlarm = false
+    @State private var now = Date()
+    @State private var clickMonitor: Any?
+    @State private var titleWidth: CGFloat = 0
     @AppStorage(TextScale.key) private var textScale = 1.0
     @FocusState private var titleFocused: Bool
 
@@ -268,22 +271,23 @@ struct TodoRow: View {
             Button {
                 showAlarm = true
             } label: {
-                TimelineView(.everyMinute) { _ in
-                    HStack(spacing: 3) {
-                        Image(systemName: "stopwatch")
-                            .font(.system(size: 16 * textScale))
-                        if let alarm = activeAlarm {
-                            Text(alarmLabel(alarm))
-                                .font(.system(size: 12 * textScale))
-                                .monospacedDigit()
-                        }
+                HStack(spacing: 3) {
+                    Image(systemName: "stopwatch")
+                        .font(.system(size: 16 * textScale))
+                    if let alarm = activeAlarm {
+                        Text(alarmLabel(alarm))
+                            .font(.system(size: 12 * textScale))
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .fixedSize()
                     }
-                    .foregroundStyle(activeAlarm != nil ? Color.accentColor : Color(white: 0.55))
                 }
+                .foregroundStyle(activeAlarm != nil ? Color.accentColor : Color(white: 0.55))
                 .frame(minWidth: 20 * textScale, minHeight: 18 * textScale)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .fixedSize()
             .opacity(item.done ? 0.4 : 1)
             .disabled(item.done)
             .help(activeAlarm.map { "Alarm: \($0.formatted(date: .abbreviated, time: .shortened))" } ?? "Sätt alarm")
@@ -291,32 +295,48 @@ struct TodoRow: View {
             .popover(isPresented: $showAlarm, arrowEdge: .bottom) {
                 AlarmEditor(item: $item) { showAlarm = false }
             }
-            if editing {
-                TextField("Uppgift", text: $item.title)
-                    .textFieldStyle(.plain)
-                    .focused($titleFocused)
-                    .onSubmit { editing = false }
-                    .onChange(of: titleFocused) { _, focused in
-                        if !focused { editing = false }
-                    }
-                    .onAppear { titleFocused = true }
-            } else {
-                Text(item.title)
-                    .strikethrough(item.done)
-                    .italic(item.done)
-                    .foregroundStyle(titleColor)
-                    .layoutPriority(1)
-                    .contentShape(Rectangle())
-                    .gesture(tapGesture)
-                    .help(item.done ? "" : "Klicka: pågår av/på · Håll in och dra: flytta · Dubbelklicka: ändra text")
+            ZStack(alignment: .topLeading) {
+                if editing {
+                    TextField("Uppgift", text: $item.title, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .focused($titleFocused)
+                        .onSubmit { editing = false }
+                        .onChange(of: titleFocused) { _, focused in
+                            if !focused { editing = false }
+                        }
+                        .onAppear { titleFocused = true }
+                } else {
+                    Text(item.title)
+                        .strikethrough(item.done)
+                        .italic(item.done)
+                        .foregroundStyle(titleColor)
+                        .contentShape(Rectangle())
+                        .gesture(tapGesture)
+                        .help(item.done ? "" : "Klicka: pågår av/på · Håll in och dra: flytta · Dubbelklicka: ändra text")
+                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { titleWidth = $0 }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .background(
                 Color.clear
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .contentShape(Rectangle())
                     .gesture(outsideTapGesture)
                     .help("Dubbelklicka: flytta överst")
-            }
+            )
         }
         .padding(.vertical, 2)
+        .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { now = $0 }
+        .onChange(of: editing) { _, isEditing in
+            if isEditing {
+                clickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { event in
+                    endEditingIfOutside(event)
+                    return event
+                }
+            } else if let clickMonitor {
+                NSEvent.removeMonitor(clickMonitor)
+                self.clickMonitor = nil
+            }
+        }
         .contentShape(Rectangle())
         .simultaneousGesture(dragGesture, including: editing ? .subviews : .all)
         .background(
@@ -351,22 +371,49 @@ struct TodoRow: View {
     }
 
     private var tapGesture: some Gesture {
-        TapGesture(count: 2).onEnded { editing = true }
+        SpatialTapGesture(count: 2).onEnded { tap in
+            if isOnText(tap.location) { editing = true } else { onMoveToTop() }
+        }
             .exclusively(before: TapGesture().onEnded {
                 guard !longPressed else { return }
                 if !item.done { item.inProgress.toggle() }
             })
     }
 
+    private func isOnText(_ point: CGPoint) -> Bool {
+        let storage = NSTextStorage(string: item.title, attributes: [.font: NSFont.systemFont(ofSize: 17 * textScale)])
+        let layout = NSLayoutManager()
+        let container = NSTextContainer(size: CGSize(width: titleWidth + 1, height: .greatestFiniteMagnitude))
+        container.lineFragmentPadding = 0
+        layout.addTextContainer(container)
+        storage.addLayoutManager(layout)
+        layout.ensureLayout(for: container)
+        var lines: [CGRect] = []
+        layout.enumerateLineFragments(forGlyphRange: NSRange(location: 0, length: layout.numberOfGlyphs)) { _, used, _, _, _ in
+            lines.append(used)
+        }
+        guard let line = lines.first(where: { point.y < $0.maxY }) ?? lines.last else { return true }
+        return point.x <= line.maxX + 4
+    }
+
+    private func endEditingIfOutside(_ event: NSEvent) {
+        guard let window = event.window,
+              let editor = window.firstResponder as? NSTextView,
+              let hit = window.contentView?.hitTest(window.contentView!.convert(event.locationInWindow, from: nil)),
+              hit === editor || hit.isDescendant(of: editor) == true
+        else {
+            editing = false
+            return
+        }
+    }
+
     private var activeAlarm: Date? {
-        guard let alarm = item.alarm, alarm > Date() else { return nil }
+        guard let alarm = item.alarm, alarm > now else { return nil }
         return alarm
     }
 
     private func alarmLabel(_ date: Date) -> String {
-        Calendar.current.isDateInToday(date)
-            ? date.formatted(date: .omitted, time: .shortened)
-            : date.formatted(.dateTime.day().month(.abbreviated).hour().minute())
+        date.formatted(date: .omitted, time: .shortened)
     }
 
     private var titleColor: Color {
@@ -394,37 +441,56 @@ struct AlarmEditor: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Alarm").font(.headline)
             Text(item.title)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-            DatePicker("Tid", selection: $date, displayedComponents: [.hourAndMinute])
-                .labelsHidden()
-            HStack {
-                Button("+15 min") { date = Date().addingTimeInterval(15 * 60) }
-                Button("+1 h") { date = Date().addingTimeInterval(60 * 60) }
-            }
-            HStack {
-                if item.alarm != nil {
-                    Button("Ta bort", role: .destructive) {
-                        item.alarm = nil
-                        close()
+            HStack(spacing: 12) {
+                ClockField(date: $date)
+                    .fixedSize()
+                    .frame(maxHeight: .infinity)
+                Grid(horizontalSpacing: 8, verticalSpacing: 8) {
+                    GridRow {
+                        if item.alarm != nil {
+                            wideButton("Ta bort", role: .destructive) {
+                                item.alarm = nil
+                                close()
+                            }
+                        } else {
+                            wideButton("Avbryt", action: close)
+                                .keyboardShortcut(.cancelAction)
+                        }
+                        wideButton("Sätt alarm") {
+                            item.alarm = nextOccurrence(of: date)
+                            close()
+                        }
+                        .keyboardShortcut(.defaultAction)
+                    }
+                    GridRow {
+                        wideButton("+15 min") { date = Date().addingTimeInterval(15 * 60) }
+                        wideButton("+1 h") { date = Date().addingTimeInterval(60 * 60) }
                     }
                 }
-                Spacer()
-                Button("Avbryt", action: close)
-                    .keyboardShortcut(.cancelAction)
-                Button("Sätt alarm") {
-                    item.alarm = nextOccurrence(of: date)
-                    close()
-                }
-                .keyboardShortcut(.defaultAction)
             }
+            .fixedSize(horizontal: false, vertical: true)
         }
         .font(.system(size: 13))
-        .padding()
+        .padding(12)
         .frame(width: 340)
+        .background {
+            if item.alarm != nil {
+                Button("", action: close)
+                    .keyboardShortcut(.cancelAction)
+                    .opacity(0)
+            }
+        }
+    }
+
+    private func wideButton(_ title: String, role: ButtonRole? = nil, action: @escaping () -> Void) -> some View {
+        Button(role: role, action: action) {
+            Text(title).frame(maxWidth: .infinity)
+        }
     }
 
     private func nextOccurrence(of time: Date) -> Date {
@@ -433,5 +499,126 @@ struct AlarmEditor: View {
         let now = Date()
         let today = cal.date(bySettingHour: parts.hour ?? 0, minute: parts.minute ?? 0, second: 0, of: now) ?? time
         return today > now ? today : cal.date(byAdding: .day, value: 1, to: today) ?? today
+    }
+}
+
+struct ClockField: View {
+    @Binding var date: Date
+    @FocusState private var focus: Part?
+    @State private var typed = ""
+    @State private var hovered: Part?
+    @State private var overClock = false
+    @State private var scrollMonitor: Any?
+    @State private var scrollAccum: CGFloat = 0
+
+    enum Part { case hour, minute }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            HStack(spacing: 0) {
+                segment(.hour)
+                Text(":").padding(.bottom, 4)
+                segment(.minute)
+            }
+            .font(.system(size: 36, weight: .medium, design: .rounded).monospacedDigit())
+            VStack(spacing: 2) {
+                chevron("chevron.up", 1)
+                chevron("chevron.down", -1)
+            }
+        }
+        .onChange(of: focus) { typed = "" }
+        .onHover { overClock = $0 }
+        .onAppear {
+            scrollMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { event in
+                handleScroll(event) ? nil : event
+            }
+        }
+        .onDisappear {
+            if let scrollMonitor { NSEvent.removeMonitor(scrollMonitor) }
+            scrollMonitor = nil
+        }
+    }
+
+    private func handleScroll(_ event: NSEvent) -> Bool {
+        guard overClock else { return false }
+        let part = focus ?? hovered ?? .minute
+        var dy = event.scrollingDeltaY
+        if event.isDirectionInvertedFromDevice { dy = -dy }
+        if event.hasPreciseScrollingDeltas {
+            scrollAccum += dy
+            let threshold: CGFloat = 12
+            while abs(scrollAccum) >= threshold {
+                step(part, scrollAccum > 0 ? 1 : -1)
+                scrollAccum -= scrollAccum > 0 ? threshold : -threshold
+            }
+        } else if dy != 0 {
+            step(part, dy > 0 ? 1 : -1)
+        }
+        return true
+    }
+
+    private func segment(_ part: Part) -> some View {
+        Text(String(format: "%02d", value(part)))
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, 3)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(focus == part ? Color.accentColor.opacity(0.25) : .clear)
+            )
+            .contentShape(Rectangle())
+            .focusable()
+            .focused($focus, equals: part)
+            .focusEffectDisabled()
+            .onTapGesture { focus = part }
+            .onHover { inside in
+                if inside { hovered = part } else if hovered == part { hovered = nil }
+            }
+            .onKeyPress(.upArrow) { step(part, 1); return .handled }
+            .onKeyPress(.downArrow) { step(part, -1); return .handled }
+            .onKeyPress(.leftArrow) { focus = .hour; return .handled }
+            .onKeyPress(.rightArrow) { focus = .minute; return .handled }
+            .onKeyPress(characters: .decimalDigits) { press in
+                type(press.characters, into: part)
+                return .handled
+            }
+    }
+
+    private func chevron(_ symbol: String, _ delta: Int) -> some View {
+        Button { step(focus ?? .minute, delta) } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 22, weight: .semibold))
+                .frame(width: 36, height: 32)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+    }
+
+    private func value(_ part: Part) -> Int {
+        Calendar.current.component(part == .hour ? .hour : .minute, from: date)
+    }
+
+    private func step(_ part: Part, _ delta: Int) {
+        let max = part == .hour ? 24 : 60
+        set(part, ((value(part) + delta) % max + max) % max)
+    }
+
+    private func type(_ digits: String, into part: Part) {
+        typed = String((typed + digits).suffix(2))
+        if let v = Int(typed), v <= (part == .hour ? 23 : 59) {
+            set(part, v)
+        }
+        if typed.count == 2 {
+            typed = ""
+            if part == .hour { focus = .minute }
+        }
+    }
+
+    private func set(_ part: Part, _ v: Int) {
+        let cal = Calendar.current
+        let hour = part == .hour ? v : value(.hour)
+        let minute = part == .minute ? v : value(.minute)
+        date = cal.date(bySettingHour: hour, minute: minute, second: 0, of: date) ?? date
     }
 }
