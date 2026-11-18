@@ -75,7 +75,6 @@ header { padding: 16px 16px 8px; flex: none; }
 .segmented {
   display: flex;
   width: max-content;
-  margin: 0 auto;
   background: #e3e3e3;
   border-radius: 7px;
   padding: 2px;
