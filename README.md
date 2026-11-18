@@ -39,7 +39,7 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 | `web/native.ts` | Talks to the Swift shell |
 | `web/index.html`, `web/app.css` | Page layout, colours and sizes |
 | `mac/src/main.swift` | The shell: window, menus, saving `todos.json`, alarms, dialogs and the right-click menu |
-| `mac/make-icon.swift` | Draws the icon (white checkmark on blue) |
+| `mac/make-icon.swift` | Draws the icon (pen and paper, dark lines on cream) |
 | `mac/set-icon.swift` | Sets the square-cornered Finder icon |
 | `VERSION` | Version number, written into the app and used as the release tag (`v1.0`) |
 | `delning/` | Install guide included in the share package `~/Applications/AttGöra för Mac.zip` |
