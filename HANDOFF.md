@@ -22,7 +22,7 @@ Add, edit, complete, delete, filter, clear completed, ⌘N, drag to reorder, com
 - **No SwiftData.** Storage is a Codable JSON file, chosen because SwiftData macros don't build reliably with plain `swiftc`. Changing `TodoItem`'s fields breaks decoding of existing data unless new fields are optional or have defaults handled in a custom decoder; a failed decode starts with an empty list and the next save overwrites the file.
 - `TodoStore.items`'s `didSet` re-sorts unfinished before finished (stable), so any mutation can reorder the array. Rows are addressed by id, not index, for that reason. `move(visible:from:to:)` reorders only the slots of the currently visible ids.
 - `TodoStore.items` saves on every `didSet`, including each keystroke while editing a task. Fine for small lists.
-- The uninstaller is a copy of the shared script used by the other apps, with a `todo` entry added. The other apps' copies don't know about Todo.
+- The uninstaller started as a copy of a script shared with other apps; this copy only knows about Todo.
 
 ## Ideas not done
 
