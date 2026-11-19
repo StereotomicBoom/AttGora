@@ -27,7 +27,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", text?: stri
 }
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const newInput = $<HTMLInputElement>("new-title");
+const newInput = $<HTMLTextAreaElement>("new-title");
 const addButton = $<HTMLButtonElement>("add");
 const list = $<HTMLDivElement>("list");
 const empty = $<HTMLDivElement>("empty");
@@ -228,15 +228,22 @@ function beginDrag(wrap: HTMLDivElement, startY: number) {
   window.addEventListener("pointerup", up);
 }
 
+function fitNewInput() {
+  newInput.style.height = "auto";
+  newInput.style.height = `${newInput.scrollHeight + newInput.offsetHeight - newInput.clientHeight}px`;
+}
+
 function add() {
   store.add(newInput.value);
   newInput.value = "";
+  fitNewInput();
   render();
 }
 
 async function setScale(value: number) {
   scale = Math.min(2, Math.max(0.7, Math.round(value * 10) / 10));
   document.documentElement.style.setProperty("--s", String(scale));
+  fitNewInput();
   await native("setScale", { value: scale });
   render();
 }
@@ -280,8 +287,11 @@ window.todo = {
   },
 };
 
-newInput.addEventListener("input", () => { addButton.disabled = !newInput.value.trim(); });
-newInput.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+newInput.addEventListener("input", () => { addButton.disabled = !newInput.value.trim(); fitNewInput(); });
+newInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); add(); }
+});
+window.addEventListener("resize", fitNewInput);
 addButton.addEventListener("click", add);
 smaller.addEventListener("click", () => setScale(scale - 0.1));
 bigger.addEventListener("click", () => setScale(scale + 0.1));
@@ -297,6 +307,7 @@ setInterval(() => { if (!editingId && !dragging && !closeAlarm) render(); }, 30_
 (async () => {
   scale = await native("getScale");
   document.documentElement.style.setProperty("--s", String(scale));
+  fitNewInput();
   await store.load();
   render();
   newInput.focus();

@@ -7,14 +7,14 @@
 </head>
 <body>
   <header>
-    <div class="new-row">
-      <input id="new-title" placeholder="Ny uppgift" autocomplete="off" spellcheck="false">
-      <button id="add" class="btn large">Lägg till</button>
-    </div>
-    <div class="segmented">
-      <button data-filter="all">Alla</button>
-      <button data-filter="active">Kvar</button>
-      <button data-filter="done">Klara</button>
+    <textarea id="new-title" rows="1" placeholder="Ny uppgift" autocomplete="off" spellcheck="false"></textarea>
+    <div class="filter-row">
+      <div class="segmented">
+        <button data-filter="all">Alla</button>
+        <button data-filter="active">Kvar</button>
+        <button data-filter="done">Klara</button>
+      </div>
+      <button id="add" class="btn">Lägg till</button>
     </div>
   </header>
   <div class="rule"></div>
