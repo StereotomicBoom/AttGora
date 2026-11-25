@@ -11,6 +11,7 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 - Add a task in the "Ny uppgift" field (Return or "Lägg till"). ⌘N jumps to the field.
 - Click a task's text to mark it as in progress (light blue row background); click again to turn it off. Double-click the text to edit it. Tick the checkbox to mark it done (this also clears "in progress").
 - Delete with right-click → "Ta bort".
+- Save a task as a text file anywhere with right-click → "Spara som…" (title, status, priority, alarm and created date; the Desktop is suggested).
 - Completed tasks sink to the bottom automatically; unticking moves a task back up.
 - Drag tasks to reorder them (in any filter). Unfinished tasks always stay above completed ones.
 - Star: click the star to mark a task as important, or right-click → "Prioritet". New tasks are placed right after the last starred task.

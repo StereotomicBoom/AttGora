@@ -50,6 +50,27 @@ function activeAlarm(item: TodoItem) {
   return item.alarm != null && fromRef(item.alarm) > Date.now() ? item.alarm : null;
 }
 
+async function saveAsText(item: TodoItem) {
+  const when = (ref: number) =>
+    new Date(fromRef(ref)).toLocaleString("sv-SE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const status = item.done ? "Klar" : item.inProgress ? "Pågår" : "Kvar";
+  const active = activeAlarm(item);
+  const lines = [
+    item.title,
+    "",
+    "Status: " + status,
+    ...(item.priority ? ["Prioritet: ★"] : []),
+    ...(active != null ? ["Alarm: " + when(active)] : []),
+    "Skapad: " + when(item.created),
+  ];
+  const name = (item.title.replace(/[\/:\\]/g, "-").slice(0, 60).trim() || "Uppgift") + ".txt";
+  try {
+    await native("saveFile", { name, text: lines.join("\n") + "\n" });
+  } catch (err) {
+    await native("dialog", { title: "Kunde inte spara", text: String(err) });
+  }
+}
+
 function render() {
   const ids = visibleIds();
   list.replaceChildren(...ids.map((id, n) => renderRow(store.get(id)!, n + 1)));
@@ -132,10 +153,13 @@ function renderRow(item: TodoItem, number: number) {
           { id: "p0", title: "Ingen", checked: !item.priority },
           { id: "p2", title: "Medel", checked: !!item.priority },
         ] },
+        { id: "save", title: "Spara som…" },
+        { separator: true },
         { id: "delete", title: "Ta bort" },
       ] satisfies MenuEntry[],
     });
-    if (picked === "p0") store.update(item.id, { priority: 0 });
+    if (picked === "save") saveAsText(item);
+    else if (picked === "p0") store.update(item.id, { priority: 0 });
     else if (picked === "p2") store.update(item.id, { priority: STARRED });
     else if (picked === "delete") store.delete(item.id);
   });

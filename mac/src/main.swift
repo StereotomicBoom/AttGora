@@ -1,4 +1,5 @@
 import Cocoa
+import UniformTypeIdentifiers
 import WebKit
 
 let dataDir: URL = {
@@ -131,6 +132,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
             picker.build(body["items"] as? [[String: Any]] ?? [], into: menu)
             menu.popUp(positioning: nil, at: webView.convert(window.mouseLocationOutsideOfEventStream, from: nil), in: webView)
             replyHandler(picker.picked, nil)
+        case "saveFile":
+            NSApp.activate(ignoringOtherApps: true)
+            let panel = NSSavePanel()
+            panel.nameFieldStringValue = body["name"] as? String ?? "Uppgift.txt"
+            panel.allowedContentTypes = [.plainText]
+            panel.directoryURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
+            guard panel.runModal() == .OK, let url = panel.url else { return replyHandler(false, nil) }
+            do {
+                try Data((body["text"] as? String ?? "").utf8).write(to: url, options: .atomic)
+                replyHandler(true, nil)
+            } catch {
+                replyHandler(nil, error.localizedDescription)
+            }
         default:
             replyHandler(nil, "unknown command")
         }
