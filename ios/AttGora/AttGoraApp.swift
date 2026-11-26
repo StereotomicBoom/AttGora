@@ -10,6 +10,7 @@ let dataDir: URL = {
 }()
 let todosFile = dataDir.appendingPathComponent("todos.json")
 let syncFile = dataDir.appendingPathComponent("sync.json")
+let listsFile = dataDir.appendingPathComponent("lists.json")
 let webRoot = Bundle.main.resourceURL!.appendingPathComponent("web", isDirectory: true)
 
 @main
@@ -78,7 +79,24 @@ final class WebController: UIViewController, WKScriptMessageHandlerWithReply, WK
         if let c = current, c.ready { c.sendAlarm(id, at) } else { pendingAlarms.append((id, at)) }
     }
 
-    private var theme: String { traitCollection.userInterfaceStyle == .dark ? "dark" : "light" }
+    private var theme: String {
+        UserDefaults.standard.string(forKey: "theme") ?? (traitCollection.userInterfaceStyle == .dark ? "dark" : "light")
+    }
+
+    private func applyTheme() {
+        let saved = UserDefaults.standard.string(forKey: "theme")
+        view.window?.overrideUserInterfaceStyle = saved == nil ? .unspecified : saved == "dark" ? .dark : .light
+        let background: UIColor = theme == "dark" ? UIColor(white: 0.118, alpha: 1)
+            : theme == "mid" ? UIColor(red: 0.647, green: 0.647, blue: 0.643, alpha: 1) : .white
+        view.backgroundColor = background
+        webView.backgroundColor = background
+        webView.evaluateJavaScript("document.documentElement.dataset.theme = '\(theme)'")
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        applyTheme()
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -103,7 +121,7 @@ final class WebController: UIViewController, WKScriptMessageHandlerWithReply, WK
         webView.load(URLRequest(url: URL(string: "app://local/index.html")!))
 
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: WebController, _) in
-            self.webView.evaluateJavaScript("document.documentElement.dataset.theme = '\(self.theme)'")
+            self.applyTheme()
         }
     }
 
@@ -128,10 +146,21 @@ final class WebController: UIViewController, WKScriptMessageHandlerWithReply, WK
             try? Data(json.utf8).write(to: todosFile, options: .atomic)
             scheduleAlarms(parsed)
             replyHandler(true, nil)
+        case "loadLists":
+            replyHandler((try? String(contentsOf: listsFile, encoding: .utf8)) ?? "{}", nil)
+        case "saveLists":
+            try? Data((body["json"] as? String ?? "{}").utf8).write(to: listsFile, options: .atomic)
+            replyHandler(true, nil)
         case "loadSync":
             replyHandler((try? String(contentsOf: syncFile, encoding: .utf8)) ?? "{}", nil)
         case "saveSync":
             try? Data((body["json"] as? String ?? "{}").utf8).write(to: syncFile, options: .atomic)
+            replyHandler(true, nil)
+        case "setTheme":
+            if let value = body["value"] as? String, ["light", "mid", "dark"].contains(value) {
+                UserDefaults.standard.set(value, forKey: "theme")
+                applyTheme()
+            }
             replyHandler(true, nil)
         case "platform":
             replyHandler("ios", nil)

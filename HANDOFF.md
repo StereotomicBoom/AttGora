@@ -14,9 +14,9 @@ Written 2026-11-11, updated 2026-11-18, for whoever picks this app up next, pers
 
 ## State as of 2026-11-18 (version 2.0)
 
-Rewritten from SwiftUI to TypeScript. The page in `web/` (compiled by `tsc` into `mac/build/web/`) runs in a `WKWebView` inside a small Swift shell, `mac/src/main.swift`, the same set-up as JobbbAppp. The page talks to the shell through one message handler, `native`, with commands `load`, `save`, `loadSync`, `saveSync`, `platform`, `ready`, `getScale`, `setScale`, `version`, `open`, `dialog`, `menu` and `saveFile` (see `web/native.ts`). The shell calls back into the page through `window.todo` (⌘N, text size, update check, alarm result).
+Rewritten from SwiftUI to TypeScript. The page in `web/` (compiled by `tsc` into `mac/build/web/`) runs in a `WKWebView` inside a small Swift shell, `mac/src/main.swift`, the same set-up as JobbbAppp. The page talks to the shell through one message handler, `native`, with commands `load`, `save`, `loadLists`, `saveLists`, `loadSync`, `saveSync`, `platform`, `ready`, `getScale`, `setScale`, `version`, `open`, `dialog`, `menu` and `saveFile` (see `web/native.ts`). The shell calls back into the page through `window.todo` (⌘N, text size, update check, alarm result).
 
-Features: add (after the last starred task), edit (double-click the text), in progress (single click), star, alarm with a custom clock, drag to reorder (press and hold), double-click blank space to move to top, filter, clear completed, text size, update check against GitHub Releases.
+Features: add (after the last starred task), edit (double-click the text), in progress (single click), star, alarm with a custom clock, drag to reorder (press and hold), double-click blank space to move to top, several lists, one shared note, clear completed (current list), text size, update check against GitHub Releases.
 
 ## Sync and iPhone (added 2026-11-26)
 
@@ -29,6 +29,7 @@ Features: add (after the last starred task), edit (double-click the text), in pr
 
 ## Traps
 
+- Lists: every task has `list` (a list id; tasks without one belong to `default`, named "AttGöra", which has the same id on every device so the first lists merge). `lists.json` holds `{lists, current, note}`; `current` is per device and not synced. The filters Alla/Kvar/Klara were removed when lists came in. Sync merges lists like tasks (newest `modified` wins, ids in the shared `deleted` tombstones), and the note as a whole (newest wins).
 - `todos.json` keeps the format of the Swift version: dates are seconds since 2001-01-01 (Apple's reference date), not Unix time. Use `toRef`/`fromRef` in `web/native.ts`. Old files load fine.
 - Alarms are checked by the shell every 5 seconds, not by the page, so they ring even when the window is closed (closing only hides it). The shell keeps its own copy of the items from the last `save`.
 - `Store.set` re-sorts after every change: unticked tasks first, then open tasks, then done tasks; a done task loses its alarm and "in progress". Rows are addressed by id, never by index.

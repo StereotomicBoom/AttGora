@@ -1,8 +1,6 @@
 const store = new Store();
 const REPO = "StereotomicBoom/AttGora";
 
-type Filter = "all" | "active" | "done";
-let filter: Filter = "all";
 let scale = 1;
 let editingId: string | null = null;
 let dragging = false;
@@ -18,6 +16,9 @@ const icons = {
   chevronDown: '<svg viewBox="0 0 24 24"><polyline points="5 8.5 12 15.5 19 8.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   minus: '<svg viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
   plus: '<svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  lists: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="5.4" y="5" width="13.1" height="15" transform="rotate(-8 12 5.25)" style="fill: var(--btn)"/><path d="M5.4 5H18.5V17L15.5 20H5.4Z" transform="rotate(3 12 5.25)" style="fill: var(--btn)"/><path d="M18.5 17H15.5V20Z" transform="rotate(3 12 5.25)" fill="currentColor"/><circle cx="12" cy="5.25" r="2.2" fill="currentColor" stroke="none"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19.5l1-4.2L16.2 4.6a2.1 2.1 0 0 1 3 3L8.5 18.4z"/><path d="M14.4 6.4l3 3"/></svg>',
+  theme: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
   cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.1 4.7 4.7 0 0 0 7 18.5z"/></svg>',
 };
 
@@ -38,11 +39,14 @@ const smaller = $<HTMLButtonElement>("smaller");
 const bigger = $<HTMLButtonElement>("bigger");
 const clearDone = $<HTMLButtonElement>("clear-done");
 const syncButton = $<HTMLButtonElement>("sync");
+const themeButton = $<HTMLButtonElement>("theme");
+const newListButton = $<HTMLButtonElement>("new-list");
+const listsButton = $<HTMLButtonElement>("lists");
+const noteButton = $<HTMLButtonElement>("note");
+const listName = $<HTMLButtonElement>("list-name");
 
 function visibleIds() {
-  return store.items
-    .filter((i) => (filter === "all" ? true : filter === "active" ? !i.done : i.done))
-    .map((i) => i.id);
+  return store.visible.map((i) => i.id);
 }
 
 function alarmLabel(ref: number) {
@@ -78,13 +82,14 @@ function render() {
   const ids = visibleIds();
   list.replaceChildren(...ids.map((id, n) => renderRow(store.get(id)!, n + 1)));
   empty.hidden = ids.length > 0;
-  empty.textContent = store.items.length === 0 ? "Inget att göra 🎉" : "Inga uppgifter här";
+  empty.textContent = "Inget att göra 🎉";
   remaining.textContent = `${store.remaining} kvar`;
-  clearDone.disabled = !store.items.some((i) => i.done);
+  clearDone.disabled = !store.visible.some((i) => i.done);
+  listName.textContent = store.currentList.name;
+  noteButton.classList.toggle("on", !!store.note.text.trim());
   addButton.disabled = !newInput.value.trim();
   smaller.disabled = scale <= 0.7;
   bigger.disabled = scale >= 2.0;
-  document.querySelectorAll<HTMLButtonElement>(".segmented button").forEach((b) => b.classList.toggle("on", b.dataset.filter === filter));
 }
 
 function renderRow(item: TodoItem, number: number) {
@@ -326,6 +331,8 @@ window.todo = {
   resetScale: () => setScale(1),
   checkForUpdates,
   openSync,
+  newList: () => store.addList(),
+  openNote,
   setAlarm: (id, alarm) => {
     closeAlarm?.();
     store.update(id, { alarm: alarm ?? undefined });
@@ -341,8 +348,28 @@ addButton.addEventListener("click", add);
 smaller.addEventListener("click", () => setScale(scale - 0.1));
 bigger.addEventListener("click", () => setScale(scale + 0.1));
 clearDone.addEventListener("click", () => store.clearCompleted());
-document.querySelectorAll<HTMLButtonElement>(".segmented button").forEach((b) =>
-  b.addEventListener("click", () => { filter = b.dataset.filter as Filter; render(); }));
+const themes = [["light", "Ljust"], ["mid", "Mellan"], ["dark", "Mörkt"]];
+const paintTheme = () => {
+  const current = themes.find(([id]) => id === document.documentElement.dataset.theme) ?? themes[0];
+  themeButton.title = `Utseende: ${current[1]} (klicka för att byta)`;
+};
+themeButton.innerHTML = icons.theme;
+themeButton.addEventListener("click", () => {
+  const n = themes.findIndex(([id]) => id === document.documentElement.dataset.theme);
+  const next = themes[(n + 1) % themes.length][0];
+  document.documentElement.dataset.theme = next;
+  native("setTheme", { value: next });
+  paintTheme();
+});
+new MutationObserver(paintTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+paintTheme();
+newListButton.innerHTML = icons.plus;
+listsButton.innerHTML = icons.lists;
+noteButton.innerHTML = icons.pencil;
+newListButton.addEventListener("click", () => { store.addList(); if (platform === "mac") newInput.focus(); });
+listsButton.addEventListener("click", openListMenu);
+listName.addEventListener("click", openListMenu);
+noteButton.addEventListener("click", openNote);
 smaller.innerHTML = icons.minus;
 bigger.innerHTML = icons.plus;
 syncButton.innerHTML = icons.cloud;

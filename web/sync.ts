@@ -7,6 +7,8 @@ interface Snapshot {
   items: TodoItem[];
   deleted: Record<string, number>;
   orderModified: number;
+  lists?: TodoList[];
+  note?: Note;
 }
 
 interface SyncState {
@@ -55,24 +57,32 @@ const Sync = (() => {
     return out;
   }
 
-  const snapshot = (): Snapshot => ({ v: 1, items: store.items, deleted: store.deleted, orderModified: store.orderModified });
+  const snapshot = (): Snapshot => ({ v: 1, items: store.items, deleted: store.deleted, orderModified: store.orderModified, lists: store.lists, note: store.note });
+
+  function newest<T extends { id: string; modified?: number }>(all: T[], deleted: Record<string, number>) {
+    const found = new Map<string, T>();
+    for (const x of all) {
+      const have = found.get(x.id);
+      if (!have || (x.modified ?? 0) > (have.modified ?? 0)) found.set(x.id, x);
+    }
+    for (const [id, x] of found) if ((deleted[id] ?? -Infinity) >= (x.modified ?? 0)) found.delete(id);
+    return found;
+  }
 
   function merge(local: Snapshot, other: Snapshot): Snapshot {
     const deleted = { ...local.deleted };
     for (const [id, at] of Object.entries(other.deleted ?? {})) deleted[id] = Math.max(deleted[id] ?? 0, at);
 
-    const newest = new Map<string, TodoItem>();
-    for (const item of [...local.items, ...(other.items ?? [])]) {
-      const have = newest.get(item.id);
-      if (!have || (item.modified ?? 0) > (have.modified ?? 0)) newest.set(item.id, item);
-    }
-    for (const [id, item] of newest) if ((deleted[id] ?? -Infinity) >= (item.modified ?? 0)) newest.delete(id);
+    const items = newest([...local.items, ...(other.items ?? [])], deleted);
+    const lists = [...newest([...(local.lists ?? []), ...(other.lists ?? [])], deleted).values()].sort((a, b) => a.created - b.created);
+    const localNote = local.note ?? { text: "", modified: 0 };
+    const note = (other.note?.modified ?? 0) > localNote.modified ? other.note! : localNote;
 
     const otherWins = (other.orderModified ?? 0) > local.orderModified;
     const [base, rest] = otherWins ? [other.items, local.items] : [local.items, other.items ?? []];
-    const order = base.map((i) => i.id).filter((id) => newest.has(id));
+    const order = base.map((i) => i.id).filter((id) => items.has(id));
     rest.forEach((item, n) => {
-      if (!newest.has(item.id) || order.includes(item.id)) return;
+      if (!items.has(item.id) || order.includes(item.id)) return;
       let at = 0;
       for (let k = n - 1; k >= 0; k--) {
         const before = order.indexOf(rest[k].id);
@@ -81,7 +91,7 @@ const Sync = (() => {
       order.splice(at, 0, item.id);
     });
 
-    return { v: 1, items: order.map((id) => newest.get(id)!), deleted, orderModified: Math.max(local.orderModified, other.orderModified ?? 0) };
+    return { v: 1, items: order.map((id) => items.get(id)!), deleted, orderModified: Math.max(local.orderModified, other.orderModified ?? 0), lists, note };
   }
 
   async function syncOnce() {
@@ -95,7 +105,7 @@ const Sync = (() => {
     const before = JSON.stringify(snapshot());
     if (JSON.stringify(merged) !== before) {
       if (busy()) { schedule(3000); return; }
-      store.replace(merged.items, merged.deleted, merged.orderModified);
+      store.replace(merged.items, merged.deleted, merged.orderModified, merged.lists ?? [], merged.note ?? store.note);
     }
     const data = JSON.stringify(snapshot());
     if (data !== state.pushed) {

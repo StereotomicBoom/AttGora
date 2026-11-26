@@ -7,6 +7,8 @@ interface Window {
     checkForUpdates(manual: boolean): void;
     setAlarm(id: string, alarm: number | null): void;
     openSync(): void;
+    newList(): void;
+    openNote(): void;
   };
 }
 
@@ -19,6 +21,19 @@ interface TodoItem {
   inProgress: boolean;
   alarm?: number;
   modified?: number;
+  list?: string;
+}
+
+interface TodoList {
+  id: string;
+  name: string;
+  created: number;
+  modified?: number;
+}
+
+interface Note {
+  text: string;
+  modified: number;
 }
 
 interface MenuEntry {

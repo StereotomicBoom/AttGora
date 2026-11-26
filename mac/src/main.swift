@@ -10,6 +10,7 @@ let dataDir: URL = {
 }()
 let todosFile = dataDir.appendingPathComponent("todos.json")
 let syncFile = dataDir.appendingPathComponent("sync.json")
+let listsFile = dataDir.appendingPathComponent("lists.json")
 let webRoot = Bundle.main.resourceURL!.appendingPathComponent("web", isDirectory: true)
 
 final class SchemeHandler: NSObject, WKURLSchemeHandler {
@@ -110,10 +111,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
             items = parsed
             try? Data(json.utf8).write(to: todosFile, options: .atomic)
             replyHandler(true, nil)
+        case "loadLists":
+            replyHandler((try? String(contentsOf: listsFile, encoding: .utf8)) ?? "{}", nil)
+        case "saveLists":
+            try? Data((body["json"] as? String ?? "{}").utf8).write(to: listsFile, options: .atomic)
+            replyHandler(true, nil)
         case "loadSync":
             replyHandler((try? String(contentsOf: syncFile, encoding: .utf8)) ?? "{}", nil)
         case "saveSync":
             try? Data((body["json"] as? String ?? "{}").utf8).write(to: syncFile, options: .atomic)
+            replyHandler(true, nil)
+        case "setTheme":
+            applyTheme(body["value"] as? String ?? "")
             replyHandler(true, nil)
         case "platform":
             replyHandler("mac", nil)
@@ -237,6 +246,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
 
     @objc func setTheme(_ sender: NSMenuItem) {
         guard let value = sender.representedObject as? String else { return }
+        applyTheme(value)
+    }
+
+    private func applyTheme(_ value: String) {
+        guard ["light", "mid", "dark"].contains(value) else { return }
         UserDefaults.standard.set(value, forKey: "theme")
         applyWindowTheme()
         webView.configuration.userContentController.removeAllUserScripts()

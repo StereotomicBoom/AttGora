@@ -16,8 +16,6 @@
   --btn-active: #e8e8e8;
   --btn-disabled: #b5b5b5;
   --shadow: rgba(0, 0, 0, 0.18);
-  --segmented: #e3e3e3;
-  --segmented-on: #fff;
   --check-edge: #737373;
   --check-bg: #fff;
   --popover: #fff;
@@ -45,8 +43,6 @@
   --btn: #afafad;
   --btn-active: #9c9c9b;
   --btn-disabled: #7a7a78;
-  --segmented: #979795;
-  --segmented-on: #b1b1af;
   --check-edge: #4a4a48;
   --check-bg: #afafad;
   --popover: #adadab;
@@ -71,8 +67,6 @@
   --btn-active: #4a4a4a;
   --btn-disabled: #6a6a6a;
   --shadow: rgba(0, 0, 0, 0.5);
-  --segmented: #2e2e2e;
-  --segmented-on: #5a5a5a;
   --check-edge: #8a8a8a;
   --check-bg: transparent;
   --popover: #2b2b2b;
@@ -145,27 +139,23 @@ header { padding: 16px 16px 8px; flex: none; }
 #add { flex: none; height: calc(var(--button-h) + 4px); padding: 0 10px; white-space: nowrap; }
 .btn.icon { width: 28px; height: 24px; padding: 0; display: inline-grid; place-items: center; }
 .btn.icon svg { width: 13px; height: 13px; }
-
-.segmented {
-  display: flex;
-  width: max-content;
+#theme, #new-list, #lists, #note { flex: none; height: calc(var(--button-h) + 4px); width: calc(var(--button-h) + 10px); }
+#lists svg { width: 17px; height: 17px; }
+#note.on { color: var(--accent); }
+#list-name {
+  flex: 1;
   min-width: 0;
-  background: var(--segmented);
-  border-radius: 7px;
-  padding: 2px;
-}
-.segmented button {
-  flex: 0 1 var(--button-w);
-  min-width: 0;
-  width: var(--button-w);
-  height: var(--button-h);
-  border: 0;
-  background: transparent;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
   font-size: 13px;
-  padding: 0;
-  border-radius: 5px;
+  font-weight: 600;
+  padding: 0 4px;
+  border: 0;
+  background: none;
 }
-.segmented button.on { background: var(--segmented-on); box-shadow: 0 0.5px 2px var(--shadow); }
+
 
 main { flex: 1; overflow-y: auto; position: relative; padding: 0 4px; background: var(--paper); }
 
@@ -391,8 +381,11 @@ footer {
 }
 .sheet-key { font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.03em; }
 .sheet-field:focus { border-color: var(--accent); }
+.sheet-field::placeholder { color: var(--placeholder); }
 .sheet-message { min-height: 1.4em; margin-bottom: 8px; color: var(--subtle); }
 .sheet-message.error { color: var(--destructive); }
+.note-sheet { width: min(560px, 100%); }
+.note-text { height: min(55vh, 420px); resize: none; font-size: 14px; line-height: 1.45; }
 .sheet-buttons { display: flex; justify-content: flex-end; gap: 8px; }
 
 :root[data-platform="ios"] {
@@ -408,8 +401,9 @@ footer {
 }
 :root[data-platform="ios"] main { padding-left: max(4px, env(safe-area-inset-left)); padding-right: max(4px, env(safe-area-inset-right)); }
 :root[data-platform="ios"] .btn { font-size: 15px; padding: 6px 14px; }
-:root[data-platform="ios"] .btn.icon { width: 40px; height: 34px; }
-:root[data-platform="ios"] .segmented button { height: 30px; font-size: 14px; }
+:root[data-platform="ios"] .btn.icon, :root[data-platform="ios"] #theme, :root[data-platform="ios"] #new-list, :root[data-platform="ios"] #lists, :root[data-platform="ios"] #note { width: 40px; height: 34px; }
+:root[data-platform="ios"] #list-name { font-size: 16px; }
+:root[data-platform="ios"] .note-text { font-size: 16px; }
 :root[data-platform="ios"] #clear-done { height: 34px; }
 :root[data-platform="ios"] .sheet { font-size: 15px; }
 :root[data-platform="ios"] .sheet-field { font-size: 17px; padding: 10px; }

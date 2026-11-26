@@ -13,17 +13,19 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 - Delete with right-click → "Ta bort".
 - Save a task as a text file anywhere with right-click → "Spara som…" (title, status, priority, alarm and created date; the Desktop is suggested).
 - Completed tasks sink to the bottom automatically; unticking moves a task back up.
-- Drag tasks to reorder them (in any filter). Unfinished tasks always stay above completed ones.
+- Drag tasks to reorder them. Unfinished tasks always stay above completed ones.
 - Star: click the star to mark a task as important, or right-click → "Prioritet". New tasks are placed right after the last starred task.
 - Alarm: click the stopwatch to set a time. Scroll over the hours or minutes, use the arrows or type digits. The alarm rings even when the window is closed, as long as the app is running.
 - Double-click the blank space next to a task to move it to the top. Press and hold a row, then drag, to reorder.
-- Appearance: Visa → Utseende → Ljust / Mellan (muted grey) / Mörkt. The choice is remembered and does not follow macOS.
-- Filter: Alla / Kvar / Klara. The footer shows how many are left and has "Rensa klara".
+- Appearance: the half-filled circle at the far left of the button row switches Ljust → Mellan (muted grey) → Mörkt, as does Visa → Utseende on the Mac. The choice is remembered and does not follow macOS.
+- Lists: "+" next to the input field starts a new list ("Ny lista"). The icon button opens a menu with all lists (with how many are left in each), plus "Byt namn" and "Ta bort" for the current list. Deleting a list deletes its tasks. Tasks from before lists existed are in the list "AttGöra".
+- Notes: the pencil button opens one shared notes window, saved as you type. The pencil turns blue when there are notes.
+- The footer shows how many are left in the current list and has "Rensa klara".
 - Sync: the cloud button in the footer (or AttGöra → Synk…). On one device choose "Skapa ny nyckel", copy the sync key and paste it under Synk on the other device. Tasks then sync about every minute and whenever the app comes to the front. The newest edit of each task wins, deleted tasks stay deleted, and the most recently reordered list decides the order.
 
 ## iPhone
 
-The iPhone app (`ios/`) shows the same page in a native shell. Differences from the Mac: long-press a task (without moving) for the menu; press, hold and drag to reorder; alarms are notifications (with "Snooza 5 min"); "Spara som…" opens the share sheet; light or dark follows the phone. It is installed from TestFlight (App Store Connect → AttGöra → TestFlight).
+The iPhone app (`ios/`) shows the same page in a native shell. Differences from the Mac: long-press a task (without moving) for the menu; press, hold and drag to reorder; alarms are notifications (with "Snooza 5 min"); "Spara som…" opens the share sheet; light or dark follows the phone until you pick an appearance with the circle button. It is installed from TestFlight (App Store Connect → AttGöra → TestFlight).
 
 ## Quick start
 
@@ -40,10 +42,11 @@ The iPhone app (`ios/`) shows the same page in a native shell. Differences from 
 
 | Path | What |
 |---|---|
-| `web/app.ts` | The window: input field, filter, list, rows, drag to reorder, editing, footer, update check |
+| `web/app.ts` | The window: input field, list buttons, rows, drag to reorder, editing, footer, update check |
 | `web/alarm.ts` | The alarm popover with the clock |
 | `web/store.ts` | Loads, orders and saves the tasks |
 | `web/native.ts` | Talks to the Swift shell |
+| `web/listview.ts` | The list menu, renaming and deleting lists, and the notes window |
 | `web/sync.ts`, `web/syncview.ts` | Sync through the Cloudflare Worker, and the sync-key sheet |
 | `web/index.html`, `web/app.css` | Page layout, colours and sizes |
 | `mac/src/main.swift` | The shell: window, menus, saving `todos.json`, alarms, dialogs and the right-click menu |
@@ -57,4 +60,4 @@ The iPhone app (`ios/`) shows the same page in a native shell. Differences from 
 
 ## Data
 
-Tasks are saved as JSON in `~/Library/Application Support/Todo/todos.json`, written on every change. The folder keeps the app's old name, Todo, so tasks survived the rename. Sync state (sync key, deleted tasks) is in `sync.json` next to it. On the iPhone both files are in the app's own Application Support folder.
+Tasks are saved as JSON in `~/Library/Application Support/Todo/todos.json`, written on every change. The folder keeps the app's old name, Todo, so tasks survived the rename. Lists, the selected list and the notes are in `lists.json`, and sync state (sync key, deleted tasks) in `sync.json`, both next to it. On the iPhone these files are in the app's own Application Support folder.

@@ -10,11 +10,11 @@
   <header>
     <textarea id="new-title" rows="1" placeholder="Ny uppgift" autocomplete="off" spellcheck="false"></textarea>
     <div class="filter-row">
-      <div class="segmented">
-        <button data-filter="all">Alla</button>
-        <button data-filter="active">Kvar</button>
-        <button data-filter="done">Klara</button>
-      </div>
+      <button id="theme" class="btn icon"></button>
+      <button id="new-list" class="btn icon" title="Ny lista"></button>
+      <button id="lists" class="btn icon" title="Alla listor"></button>
+      <button id="note" class="btn icon" title="Anteckningar"></button>
+      <button id="list-name"></button>
       <button id="add" class="btn">Lägg till</button>
     </div>
   </header>
@@ -37,6 +37,7 @@
   <script src="store.js"></script>
   <script src="sync.js"></script>
   <script src="syncview.js"></script>
+  <script src="listview.js"></script>
   <script src="alarm.js"></script>
   <script src="app.js"></script>
 </body>
