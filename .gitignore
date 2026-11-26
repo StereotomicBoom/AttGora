@@ -3,3 +3,4 @@ mac/build/
 node_modules/
 ios/build/
 .wrangler/
+xcuserdata/
