@@ -17,7 +17,7 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 - Star: click the star to mark a task as important, or right-click → "Prioritet". New tasks are placed right after the last starred task.
 - Alarm: click the stopwatch to set a time. Scroll over the hours or minutes, use the arrows or type digits. The alarm rings even when the window is closed, as long as the app is running.
 - Double-click the blank space next to a task to move it to the top. Press and hold a row, then drag, to reorder.
-- White window, always in light appearance (also when macOS is in dark mode).
+- Appearance: Visa → Utseende → Ljust / Mellan (muted grey) / Mörkt. The choice is remembered and does not follow macOS.
 - Filter: Alla / Kvar / Klara. The footer shows how many are left and has "Rensa klara".
 
 ## Quick start

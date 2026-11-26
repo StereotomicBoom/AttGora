@@ -64,6 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
         let config = WKWebViewConfiguration()
         config.setURLSchemeHandler(SchemeHandler(), forURLScheme: "app")
         config.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "native")
+        config.userContentController.addUserScript(themeScript())
         webView = WKWebView(frame: .zero, configuration: config)
         webView.uiDelegate = self
         webView.navigationDelegate = self
@@ -74,8 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
                           styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = "Att göra"
         window.minSize = NSSize(width: 380, height: 420)
-        window.backgroundColor = .white
-        window.appearance = NSAppearance(named: .aqua)
+        applyWindowTheme()
         window.tabbingMode = .disallowed
         window.isReleasedWhenClosed = false
         window.delegate = self
@@ -203,6 +203,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
     @objc func checkUpdates(_ sender: Any?) { js("todo.checkForUpdates(true)") }
     @objc func showWindow(_ sender: Any?) { window.makeKeyAndOrderFront(nil) }
 
+    private var theme: String { UserDefaults.standard.string(forKey: "theme") ?? "light" }
+    private var themeItems: [NSMenuItem] = []
+
+    private func themeScript() -> WKUserScript {
+        WKUserScript(source: "document.documentElement.dataset.theme = \(jsString(theme))",
+                     injectionTime: .atDocumentStart, forMainFrameOnly: true)
+    }
+
+    private func applyWindowTheme() {
+        window.appearance = NSAppearance(named: theme == "dark" ? .darkAqua : .aqua)
+        window.backgroundColor = theme == "dark" ? NSColor(white: 0.118, alpha: 1)
+            : theme == "mid" ? NSColor(srgbRed: 0.647, green: 0.647, blue: 0.643, alpha: 1) : .white
+        window.titlebarAppearsTransparent = theme == "mid"
+        for item in themeItems { item.state = item.representedObject as? String == theme ? .on : .off }
+    }
+
+    @objc func setTheme(_ sender: NSMenuItem) {
+        guard let value = sender.representedObject as? String else { return }
+        UserDefaults.standard.set(value, forKey: "theme")
+        applyWindowTheme()
+        webView.configuration.userContentController.removeAllUserScripts()
+        webView.configuration.userContentController.addUserScript(themeScript())
+        webView.evaluateJavaScript("document.documentElement.dataset.theme = \(jsString(value))")
+    }
+
     private func buildMenu() {
         let main = NSMenu()
         func add(_ title: String, _ build: (NSMenu) -> Void) -> NSMenu {
@@ -235,6 +260,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
             m.addItem(withTitle: "Större text", action: #selector(biggerText(_:)), keyEquivalent: "+")
             m.addItem(withTitle: "Mindre text", action: #selector(smallerText(_:)), keyEquivalent: "-")
             m.addItem(withTitle: "Normal textstorlek", action: #selector(normalText(_:)), keyEquivalent: "0")
+            m.addItem(.separator())
+            let looks = NSMenu(title: "Utseende")
+            for (id, title) in [("light", "Ljust"), ("mid", "Mellan"), ("dark", "Mörkt")] {
+                let item = looks.addItem(withTitle: title, action: #selector(setTheme(_:)), keyEquivalent: "")
+                item.representedObject = id
+                item.state = id == theme ? .on : .off
+                themeItems.append(item)
+            }
+            m.addItem(withTitle: "Utseende", action: nil, keyEquivalent: "").submenu = looks
         }
         let win = add("Fönster") { m in
             m.addItem(withTitle: "Minimera", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
