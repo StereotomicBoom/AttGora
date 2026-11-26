@@ -16,7 +16,7 @@
 		A20000000000000000000001 /* AttGoraApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttGoraApp.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000003 /* web */ = {isa = PBXFileReference; lastKnownFileType = folder; name = web; path = ../mac/build/web; sourceTree = SOURCE_ROOT; };
-		A20000000000000000000004 /* AttGöra.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AttGöra.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000004 /* AttGora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AttGora.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,7 +51,7 @@
 		A40000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000004 /* AttGöra.app */,
+				A20000000000000000000004 /* AttGora.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -73,7 +73,7 @@
 			);
 			name = AttGora;
 			productName = AttGora;
-			productReference = A20000000000000000000004 /* AttGöra.app */;
+			productReference = A20000000000000000000004 /* AttGora.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -173,7 +173,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.florenceliu.attgora;
-				PRODUCT_NAME = "AttGöra";
+				PRODUCT_NAME = AttGora;
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
@@ -199,7 +199,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.florenceliu.attgora;
-				PRODUCT_NAME = "AttGöra";
+				PRODUCT_NAME = AttGora;
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;

@@ -24,6 +24,7 @@ Features: add (after the last starred task), edit (double-click the text), in pr
 - `Store.set` stamps `modified` on every changed task and records deletions/reorders; `Store.replace` applies a merge without stamping. Never write `store.items` directly.
 - Server: Cloudflare Worker `attgora-sync` (https://attgora-sync.gustavlundstrom2.workers.dev) with D1 database `attgora-sync`, on the user's existing Cloudflare account (user didn't want another Supabase account). Code in `cloudflare/`; deploy with `npx wrangler deploy`, schema changes with `npx wrangler d1 migrations apply attgora-sync --remote`. `SYNC_URL` is at the top of `web/sync.ts`.
 - iPhone shell `ios/AttGora/AttGoraApp.swift` implements the same `native` commands as the Mac shell plus `ready`. Team 9LQQ7466X2, bundle id `com.florenceliu.attgora`. The Xcode project was written by hand; the `web` folder reference points at `mac/build/web`, so run `npm run build` before building in Xcode.
+- The iOS product name must stay ASCII (`AttGora.app`; the home-screen name "AttGöra" comes from `CFBundleDisplayName`). With "ö" in the bundle path, the TestFlight upload fails with "not signed using an Apple submission certificate". Automatic signing archives with the wildcard profile; the explicit App ID was created by the App Store export.
 - Alarms: the Mac rings only alarms less than 10 minutes late and silently clears older ones (they may come from the phone). The iPhone clears past alarms when it opens.
 
 ## Traps
