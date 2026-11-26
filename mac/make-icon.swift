@@ -14,7 +14,7 @@ let ctx = NSGraphicsContext.current!.cgContext
 let s = size / 1024
 
 let paper = NSColor(red: 0xef / 255, green: 0xe8 / 255, blue: 0xd6 / 255, alpha: 1).cgColor
-let ink = NSColor(red: 0x2b / 255, green: 0x2a / 255, blue: 0x28 / 255, alpha: 1).cgColor
+let ink = NSColor(red: 0x3a / 255, green: 0x39 / 255, blue: 0x36 / 255, alpha: 1).cgColor
 
 let inset = square ? 100 * s : 0
 let tile = CGRect(x: inset, y: inset, width: size - 2 * inset, height: size - 2 * inset)
@@ -27,39 +27,55 @@ ctx.restoreGState()
 let k = tile.width / 1024
 ctx.translateBy(x: tile.minX, y: tile.maxY)
 ctx.scaleBy(x: k, y: -k)
-ctx.translateBy(x: 512, y: 512)
-ctx.scaleBy(x: 1.3, y: 1.3)
-ctx.translateBy(x: -505, y: -500)
-ctx.setStrokeColor(ink)
-ctx.setFillColor(paper)
-ctx.setLineWidth(14)
-ctx.setLineCap(.round)
-ctx.setLineJoin(.round)
 
-func line(_ points: [(CGFloat, CGFloat)], close: Bool = false) {
+ctx.setStrokeColor(ink)
+ctx.setLineWidth(28)
+ctx.setLineJoin(.round)
+ctx.setLineCap(.round)
+
+let mx: CGFloat = 512, my: CGFloat = 224
+
+func polygon(_ points: [(CGFloat, CGFloat)]) {
   ctx.move(to: CGPoint(x: points[0].0, y: points[0].1))
   for p in points.dropFirst() { ctx.addLine(to: CGPoint(x: p.0, y: p.1)) }
-  if close { ctx.closePath() }
+  ctx.closePath()
 }
 
-ctx.saveGState()
-ctx.translateBy(x: 500, y: 490)
-ctx.rotate(by: -8 * .pi / 180)
-ctx.translateBy(x: -500, y: -500)
-line([(300, 220), (600, 220), (700, 320), (700, 780), (300, 780)], close: true)
-line([(600, 220), (600, 320), (700, 320)])
-line([(360, 420), (620, 420)])
-line([(360, 500), (620, 500)])
-line([(360, 580), (500, 580)])
-ctx.strokePath()
-ctx.restoreGState()
+func rotated(_ degrees: CGFloat, _ draw: () -> Void) {
+  ctx.saveGState()
+  ctx.translateBy(x: mx, y: my)
+  ctx.rotate(by: degrees * .pi / 180)
+  ctx.translateBy(x: -mx, y: -my)
+  draw()
+  ctx.restoreGState()
+}
 
-ctx.translateBy(x: 690, y: 770)
-ctx.rotate(by: .pi / 4)
-line([(0, 0), (-96, -36), (-96, 36)], close: true)
-ctx.addPath(CGPath(roundedRect: CGRect(x: -420, y: -36, width: 308, height: 72), cornerWidth: 14, cornerHeight: 14, transform: nil))
-ctx.drawPath(using: .fillStroke)
-line([(-24, 0), (-64, 0)])
+rotated(-8) {
+  ctx.setFillColor(paper)
+  ctx.addRect(CGRect(x: 232, y: 214, width: 560, height: 640))
+  ctx.drawPath(using: .fillStroke)
+}
+
+rotated(3) {
+  ctx.setFillColor(paper)
+  polygon([(232, 214), (792, 214), (792, 724), (662, 854), (232, 854)])
+  ctx.drawPath(using: .fillStroke)
+  ctx.setFillColor(ink)
+  polygon([(792, 724), (662, 724), (662, 854)])
+  ctx.drawPath(using: .fillStroke)
+}
+
+ctx.setFillColor(ink)
+ctx.fillEllipse(in: CGRect(x: mx - 86, y: my - 86, width: 172, height: 172))
+
+ctx.setStrokeColor(paper)
+ctx.setLineWidth(18)
+let steps = 32
+for i in 0...steps {
+  let a = (200 + 55 * CGFloat(i) / CGFloat(steps)) * .pi / 180
+  let p = CGPoint(x: mx + 58 * cos(a), y: my + 58 * sin(a))
+  if i == 0 { ctx.move(to: p) } else { ctx.addLine(to: p) }
+}
 ctx.strokePath()
 
 NSGraphicsContext.restoreGraphicsState()

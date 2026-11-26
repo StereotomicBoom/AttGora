@@ -47,7 +47,7 @@ The iPhone app (`ios/`) shows the same page in a native shell. Differences from 
 | `web/sync.ts`, `web/syncview.ts` | Sync through the Cloudflare Worker, and the sync-key sheet |
 | `web/index.html`, `web/app.css` | Page layout, colours and sizes |
 | `mac/src/main.swift` | The shell: window, menus, saving `todos.json`, alarms, dialogs and the right-click menu |
-| `mac/make-icon.swift` | Draws the icon (pen and paper, dark lines on cream) |
+| `mac/make-icon.swift` | Draws the icon (two notes under a fridge magnet, dark lines on cream) |
 | `mac/set-icon.swift` | Sets the square-cornered Finder icon |
 | `ios/` | The iPhone shell (`AttGora/AttGoraApp.swift`) and its Xcode project |
 | `cloudflare/` | The sync server: a Worker (`src/index.ts`) with a D1 table (`migrations/`). Deploy with `npx wrangler deploy` in that folder |
