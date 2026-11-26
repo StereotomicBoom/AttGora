@@ -19,6 +19,20 @@ if [ "${1:-}" = "release" ]; then
   if gh release view "v$VERSION" >/dev/null 2>&1; then echo "v$VERSION finns redan. Höj VERSION först."; exit 1; fi
 fi
 
+if [ "${1:-}" = "iphone" ]; then
+  echo "Bygger iPhone-appen (version $VERSION) och laddar upp den till TestFlight…"
+  [ -d "$PROJECT/node_modules" ] || (cd "$PROJECT" && npm install --no-audit --no-fund)
+  (cd "$PROJECT" && npm run -s build)
+  ARCHIVE="$PROJECT/ios/build/AttGora.xcarchive"
+  rm -rf "$ARCHIVE" "$PROJECT/ios/build/export"
+  xcodebuild -project "$PROJECT/ios/AttGora.xcodeproj" -scheme AttGora -configuration Release -destination 'generic/platform=iOS' \
+    -archivePath "$ARCHIVE" -allowProvisioningUpdates MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$(date +%Y%m%d%H%M)" archive | tail -3
+  xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportOptionsPlist "$PROJECT/ios/ExportOptions.plist" \
+    -exportPath "$PROJECT/ios/build/export" -allowProvisioningUpdates | tail -3
+  echo "Uppladdad. Den syns i TestFlight när Apple har behandlat den (10–30 minuter)."
+  exit 0
+fi
+
 echo "Bygger appen (version $VERSION)…"
 command -v npm >/dev/null || { echo "Node.js saknas. Installera det från https://nodejs.org och kör igen."; exit 1; }
 [ -d "$PROJECT/node_modules" ] || (cd "$PROJECT" && npm install --no-audit --no-fund)

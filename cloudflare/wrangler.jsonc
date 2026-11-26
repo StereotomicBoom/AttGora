@@ -1,0 +1,9 @@
+{
+  "name": "attgora-sync",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "d1_databases": [
+    { "binding": "DB", "database_name": "attgora-sync", "database_id": "bc7db23d-2972-413c-81dd-2532577d5dd3", "migrations_dir": "migrations" }
+  ]
+}

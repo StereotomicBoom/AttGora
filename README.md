@@ -19,6 +19,11 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 - Double-click the blank space next to a task to move it to the top. Press and hold a row, then drag, to reorder.
 - Appearance: Visa → Utseende → Ljust / Mellan (muted grey) / Mörkt. The choice is remembered and does not follow macOS.
 - Filter: Alla / Kvar / Klara. The footer shows how many are left and has "Rensa klara".
+- Sync: the cloud button in the footer (or AttGöra → Synk…). On one device choose "Skapa ny nyckel", copy the sync key and paste it under Synk on the other device. Tasks then sync about every minute and whenever the app comes to the front. The newest edit of each task wins, deleted tasks stay deleted, and the most recently reordered list decides the order.
+
+## iPhone
+
+The iPhone app (`ios/`) shows the same page in a native shell. Differences from the Mac: long-press a task (without moving) for the menu; press, hold and drag to reorder; alarms are notifications (with "Snooza 5 min"); "Spara som…" opens the share sheet; light or dark follows the phone. It is installed from TestFlight (App Store Connect → AttGöra → TestFlight).
 
 ## Quick start
 
@@ -28,6 +33,7 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 | Check the TypeScript without building | `npm run typecheck` |
 | Redraw the icon | Edit `mac/make-icon.swift` and run `./bygg.sh` |
 | Share a new version | Bump `VERSION`, commit, then run `./bygg.sh release` (builds, pushes and publishes a GitHub Release with the zip) |
+| Upload the iPhone app to TestFlight | `./bygg.sh iphone` (build number is the current date and time) |
 | Uninstall | Double-click `Avinstallera AttGöra.command` (asks separately before deleting your tasks) |
 
 ## Files
@@ -38,14 +44,17 @@ The current state and pitfalls for whoever takes over are in [HANDOFF.md](HANDOF
 | `web/alarm.ts` | The alarm popover with the clock |
 | `web/store.ts` | Loads, orders and saves the tasks |
 | `web/native.ts` | Talks to the Swift shell |
+| `web/sync.ts`, `web/syncview.ts` | Sync through the Cloudflare Worker, and the sync-key sheet |
 | `web/index.html`, `web/app.css` | Page layout, colours and sizes |
 | `mac/src/main.swift` | The shell: window, menus, saving `todos.json`, alarms, dialogs and the right-click menu |
 | `mac/make-icon.swift` | Draws the icon (pen and paper, dark lines on cream) |
 | `mac/set-icon.swift` | Sets the square-cornered Finder icon |
+| `ios/` | The iPhone shell (`AttGora/AttGoraApp.swift`) and its Xcode project |
+| `cloudflare/` | The sync server: a Worker (`src/index.ts`) with a D1 table (`migrations/`). Deploy with `npx wrangler deploy` in that folder |
 | `VERSION` | Version number, written into the app and used as the release tag (`v1.0`) |
 | `delning/` | Install guide included in the share package `~/Applications/AttGöra för Mac.zip` |
 | `mac/build/` | Build output (not in git) |
 
 ## Data
 
-Tasks are saved as JSON in `~/Library/Application Support/Todo/todos.json`, written on every change. The folder keeps the app's old name, Todo, so tasks survived the rename.
+Tasks are saved as JSON in `~/Library/Application Support/Todo/todos.json`, written on every change. The folder keeps the app's old name, Todo, so tasks survived the rename. Sync state (sync key, deleted tasks) is in `sync.json` next to it. On the iPhone both files are in the app's own Application Support folder.

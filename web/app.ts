@@ -7,6 +7,7 @@ let scale = 1;
 let editingId: string | null = null;
 let dragging = false;
 let suppressClickUntil = 0;
+let platform: "mac" | "ios" = "mac";
 
 const icons = {
   check: '<svg viewBox="0 0 24 24"><polyline points="5 12.5 10 17.5 19 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -17,6 +18,7 @@ const icons = {
   chevronDown: '<svg viewBox="0 0 24 24"><polyline points="5 8.5 12 15.5 19 8.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   minus: '<svg viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
   plus: '<svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.1 4.7 4.7 0 0 0 7 18.5z"/></svg>',
 };
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", text?: string): HTMLElementTagNameMap[K] {
@@ -35,6 +37,7 @@ const remaining = $<HTMLSpanElement>("remaining");
 const smaller = $<HTMLButtonElement>("smaller");
 const bigger = $<HTMLButtonElement>("bigger");
 const clearDone = $<HTMLButtonElement>("clear-done");
+const syncButton = $<HTMLButtonElement>("sync");
 
 function visibleIds() {
   return store.items
@@ -145,30 +148,34 @@ function renderRow(item: TodoItem, number: number) {
     });
   }
 
-  row.addEventListener("contextmenu", async (e) => {
+  row.addEventListener("contextmenu", (e) => {
     e.preventDefault();
-    const picked = await native("menu", {
-      items: [
-        { title: "Prioritet", submenu: [
-          { id: "p0", title: "Ingen", checked: !item.priority },
-          { id: "p2", title: "Medel", checked: !!item.priority },
-        ] },
-        { id: "save", title: "Spara som…" },
-        { separator: true },
-        { id: "delete", title: "Ta bort" },
-      ] satisfies MenuEntry[],
-    });
-    if (picked === "save") saveAsText(item);
-    else if (picked === "p0") store.update(item.id, { priority: 0 });
-    else if (picked === "p2") store.update(item.id, { priority: STARRED });
-    else if (picked === "delete") store.delete(item.id);
+    openRowMenu(item);
   });
 
-  row.addEventListener("pointerdown", (e) => startPress(e, wrap));
+  row.addEventListener("pointerdown", (e) => startPress(e, wrap, item));
 
   row.append(num, check, star, alarm, area);
   wrap.append(row, el("div", "rule"));
   return wrap;
+}
+
+async function openRowMenu(item: TodoItem) {
+  const picked = await native("menu", {
+    items: [
+      { title: "Prioritet", submenu: [
+        { id: "p0", title: "Ingen", checked: !item.priority },
+        { id: "p2", title: "Medel", checked: !!item.priority },
+      ] },
+      { id: "save", title: "Spara som…" },
+      { separator: true },
+      { id: "delete", title: "Ta bort" },
+    ] satisfies MenuEntry[],
+  });
+  if (picked === "save") saveAsText(item);
+  else if (picked === "p0") store.update(item.id, { priority: 0 });
+  else if (picked === "p2") store.update(item.id, { priority: STARRED });
+  else if (picked === "delete") store.delete(item.id);
 }
 
 function editor(item: TodoItem) {
@@ -199,32 +206,36 @@ function startEditing(id: string) {
   render();
 }
 
-function startPress(e: PointerEvent, wrap: HTMLDivElement) {
+function startPress(e: PointerEvent, wrap: HTMLDivElement, item: TodoItem) {
   if (e.button !== 0 || editingId || (e.target as HTMLElement).closest("button, textarea")) return;
   const startY = e.clientY, startX = e.clientX;
   const cancel = () => {
     clearTimeout(timer);
     window.removeEventListener("pointermove", early);
     window.removeEventListener("pointerup", cancel);
+    window.removeEventListener("pointercancel", cancel);
   };
   const early = (m: PointerEvent) => { if (Math.hypot(m.clientX - startX, m.clientY - startY) > 6) cancel(); };
-  const timer = window.setTimeout(() => { cancel(); beginDrag(wrap, startY); }, 350);
+  const timer = window.setTimeout(() => { cancel(); beginDrag(wrap, startY, item); }, 350);
   window.addEventListener("pointermove", early);
   window.addEventListener("pointerup", cancel);
+  window.addEventListener("pointercancel", cancel);
 }
 
-function beginDrag(wrap: HTMLDivElement, startY: number) {
+function beginDrag(wrap: HTMLDivElement, startY: number, item: TodoItem) {
   dragging = true;
   const items = [...list.children] as HTMLDivElement[];
   const from = items.indexOf(wrap);
   const rects = items.map((i) => i.getBoundingClientRect());
   const height = rects[from].height;
   let to = from;
+  let moved = 0;
   wrap.classList.add("dragging");
   document.body.classList.add("is-dragging");
 
   const move = (m: PointerEvent) => {
     const dy = m.clientY - startY;
+    moved = Math.max(moved, Math.abs(dy));
     wrap.style.transform = `translateY(${dy}px)`;
     const center = rects[from].top + rects[from].height / 2 + dy;
     to = from;
@@ -242,14 +253,23 @@ function beginDrag(wrap: HTMLDivElement, startY: number) {
   const up = () => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", up);
+    window.removeEventListener("pointercancel", up);
     dragging = false;
     suppressClickUntil = Date.now() + 300;
     document.body.classList.remove("is-dragging");
     if (to !== from) store.move(visibleIds(), from, to);
     else render();
+    if (platform === "ios" && moved < 8) openRowMenu(item);
   };
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", up);
+  window.addEventListener("pointercancel", up);
+}
+
+function clearPastAlarms() {
+  for (const i of store.items) {
+    if (i.alarm != null && fromRef(i.alarm) <= Date.now()) store.update(i.id, { alarm: undefined });
+  }
 }
 
 function fitNewInput() {
@@ -305,6 +325,7 @@ window.todo = {
   scaleBy: (delta) => setScale(scale + delta),
   resetScale: () => setScale(1),
   checkForUpdates,
+  openSync,
   setAlarm: (id, alarm) => {
     closeAlarm?.();
     store.update(id, { alarm: alarm ?? undefined });
@@ -324,16 +345,34 @@ document.querySelectorAll<HTMLButtonElement>(".segmented button").forEach((b) =>
   b.addEventListener("click", () => { filter = b.dataset.filter as Filter; render(); }));
 smaller.innerHTML = icons.minus;
 bigger.innerHTML = icons.plus;
+syncButton.innerHTML = icons.cloud;
+syncButton.addEventListener("click", openSync);
+const paintSync = () => {
+  syncButton.classList.toggle("on", Sync.signedIn);
+  syncButton.classList.toggle("problem", Sync.status === "error");
+  syncButton.title = Sync.signedIn ? "Synk: " + (statusText() || "på") : "Synk: av";
+};
 
 store.onChange = render;
+document.addEventListener("touchmove", (e) => { if (dragging) e.preventDefault(); }, { passive: false });
 setInterval(() => { if (!editingId && !dragging && !closeAlarm) render(); }, 30_000);
 
 (async () => {
+  platform = await native("platform").catch(() => "mac");
+  document.documentElement.dataset.platform = platform;
   scale = await native("getScale");
   document.documentElement.style.setProperty("--s", String(scale));
   fitNewInput();
   await store.load();
   render();
-  newInput.focus();
-  checkForUpdates(false);
+  if (platform === "mac") newInput.focus();
+  await Sync.load();
+  Sync.onStatus(paintSync);
+  paintSync();
+  if (platform === "mac") checkForUpdates(false);
+  if (platform === "ios") {
+    clearPastAlarms();
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) clearPastAlarms(); });
+  }
+  native("ready");
 })();

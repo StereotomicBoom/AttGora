@@ -9,6 +9,7 @@ let dataDir: URL = {
     return dir
 }()
 let todosFile = dataDir.appendingPathComponent("todos.json")
+let syncFile = dataDir.appendingPathComponent("sync.json")
 let webRoot = Bundle.main.resourceURL!.appendingPathComponent("web", isDirectory: true)
 
 final class SchemeHandler: NSObject, WKURLSchemeHandler {
@@ -109,6 +110,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
             items = parsed
             try? Data(json.utf8).write(to: todosFile, options: .atomic)
             replyHandler(true, nil)
+        case "loadSync":
+            replyHandler((try? String(contentsOf: syncFile, encoding: .utf8)) ?? "{}", nil)
+        case "saveSync":
+            try? Data((body["json"] as? String ?? "{}").utf8).write(to: syncFile, options: .atomic)
+            replyHandler(true, nil)
+        case "platform":
+            replyHandler("mac", nil)
+        case "ready":
+            replyHandler(true, nil)
         case "getScale":
             replyHandler(UserDefaults.standard.object(forKey: "textScale") as? Double ?? 1.0, nil)
         case "setScale":
@@ -156,6 +166,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
               let index = items.firstIndex(where: { $0["done"] as? Bool != true && ($0["alarm"] as? Double ?? .infinity) <= now }),
               let id = items[index]["id"] as? String
         else { return }
+        if now - (items[index]["alarm"] as? Double ?? now) > 10 * 60 {
+            items[index]["alarm"] = Double.infinity
+            webView.evaluateJavaScript("todo.setAlarm(\(jsString(id)), null)")
+            return
+        }
         alarmShowing = true
         NSSound(named: "Glass")?.play()
         NSApp.activate(ignoringOtherApps: true)
@@ -201,6 +216,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
     @objc func smallerText(_ sender: Any?) { js("todo.scaleBy(-0.1)") }
     @objc func normalText(_ sender: Any?) { js("todo.resetScale()") }
     @objc func checkUpdates(_ sender: Any?) { js("todo.checkForUpdates(true)") }
+    @objc func openSync(_ sender: Any?) { js("todo.openSync()") }
     @objc func showWindow(_ sender: Any?) { window.makeKeyAndOrderFront(nil) }
 
     private var theme: String { UserDefaults.standard.string(forKey: "theme") ?? "light" }
@@ -238,6 +254,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUI
         _ = add("AttGöra") { m in
             m.addItem(withTitle: "Om AttGöra", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
             m.addItem(withTitle: "Sök efter uppdateringar…", action: #selector(checkUpdates(_:)), keyEquivalent: "")
+            m.addItem(withTitle: "Synk…", action: #selector(openSync(_:)), keyEquivalent: "")
             m.addItem(.separator())
             m.addItem(withTitle: "Göm AttGöra", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
             m.addItem(.separator())

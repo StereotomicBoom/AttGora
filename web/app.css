@@ -348,3 +348,68 @@ footer {
 
 .alarm-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .alarm-grid .btn { width: 100%; padding: 3px 4px; white-space: nowrap; }
+
+#sync.on { color: var(--accent); }
+#sync.problem { color: var(--destructive); }
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.25);
+}
+.sheet {
+  width: min(360px, 100%);
+  padding: 16px;
+  background: var(--popover);
+  border-radius: 12px;
+  box-shadow: 0 0 0 0.5px var(--btn-edge), 0 10px 32px var(--shadow);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.sheet.busy { opacity: 0.7; pointer-events: none; }
+.sheet p { margin: 0 0 10px; }
+.sheet-heading { font-weight: 600; font-size: 15px; margin-bottom: 10px; }
+.sheet-status { color: var(--subtle); }
+.sheet-field {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.sheet-key { font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.03em; }
+.sheet-field:focus { border-color: var(--accent); }
+.sheet-message { min-height: 1.4em; margin-bottom: 8px; color: var(--subtle); }
+.sheet-message.error { color: var(--destructive); }
+.sheet-buttons { display: flex; justify-content: flex-end; gap: 8px; }
+
+:root[data-platform="ios"] {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+:root[data-platform="ios"] header { padding-top: max(16px, env(safe-area-inset-top)); }
+:root[data-platform="ios"] footer { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+:root[data-platform="ios"] header, :root[data-platform="ios"] footer, :root[data-platform="ios"] main {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+:root[data-platform="ios"] main { padding-left: max(4px, env(safe-area-inset-left)); padding-right: max(4px, env(safe-area-inset-right)); }
+:root[data-platform="ios"] .btn { font-size: 15px; padding: 6px 14px; }
+:root[data-platform="ios"] .btn.icon { width: 40px; height: 34px; }
+:root[data-platform="ios"] .segmented button { height: 30px; font-size: 14px; }
+:root[data-platform="ios"] #clear-done { height: 34px; }
+:root[data-platform="ios"] .sheet { font-size: 15px; }
+:root[data-platform="ios"] .sheet-field { font-size: 17px; padding: 10px; }

@@ -14,9 +14,17 @@ Written 2026-11-11, updated 2026-11-18, for whoever picks this app up next, pers
 
 ## State as of 2026-11-18 (version 2.0)
 
-Rewritten from SwiftUI to TypeScript. The page in `web/` (compiled by `tsc` into `mac/build/web/`) runs in a `WKWebView` inside a small Swift shell, `mac/src/main.swift`, the same set-up as JobbbAppp. The page talks to the shell through one message handler, `native`, with commands `load`, `save`, `getScale`, `setScale`, `version`, `open`, `dialog` and `menu` (see `web/native.ts`). The shell calls back into the page through `window.todo` (⌘N, text size, update check, alarm result).
+Rewritten from SwiftUI to TypeScript. The page in `web/` (compiled by `tsc` into `mac/build/web/`) runs in a `WKWebView` inside a small Swift shell, `mac/src/main.swift`, the same set-up as JobbbAppp. The page talks to the shell through one message handler, `native`, with commands `load`, `save`, `loadSync`, `saveSync`, `platform`, `ready`, `getScale`, `setScale`, `version`, `open`, `dialog`, `menu` and `saveFile` (see `web/native.ts`). The shell calls back into the page through `window.todo` (⌘N, text size, update check, alarm result).
 
 Features: add (after the last starred task), edit (double-click the text), in progress (single click), star, alarm with a custom clock, drag to reorder (press and hold), double-click blank space to move to top, filter, clear completed, text size, update check against GitHub Releases.
+
+## Sync and iPhone (added 2026-11-26)
+
+- `web/sync.ts`: no accounts. Devices share a random 24-character sync key (user's choice; Cloudflare can't send sign-in e-mails). The Worker stores rows under SHA-256 of the key, one row per device in `snapshots`; each device reads the others' rows, merges, and PUTs its own. "Koppla från" deletes the device's row. Merge rules: newest `modified` per task wins, `deleted` tombstones (kept 400 days) beat older edits, order comes from the snapshot with the newest `orderModified`.
+- `Store.set` stamps `modified` on every changed task and records deletions/reorders; `Store.replace` applies a merge without stamping. Never write `store.items` directly.
+- Server: Cloudflare Worker `attgora-sync` (https://attgora-sync.gustavlundstrom2.workers.dev) with D1 database `attgora-sync`, on the user's existing Cloudflare account (user didn't want another Supabase account). Code in `cloudflare/`; deploy with `npx wrangler deploy`, schema changes with `npx wrangler d1 migrations apply attgora-sync --remote`. `SYNC_URL` is at the top of `web/sync.ts`.
+- iPhone shell `ios/AttGora/AttGoraApp.swift` implements the same `native` commands as the Mac shell plus `ready`. Team 9LQQ7466X2, bundle id `com.florenceliu.attgora`. The Xcode project was written by hand; the `web` folder reference points at `mac/build/web`, so run `npm run build` before building in Xcode.
+- Alarms: the Mac rings only alarms less than 10 minutes late and silently clears older ones (they may come from the phone). The iPhone clears past alarms when it opens.
 
 ## Traps
 

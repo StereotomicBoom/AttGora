@@ -9,5 +9,5 @@
     "outDir": "mac/build/web",
     "skipLibCheck": true
   },
-  "files": ["web/types.d.ts", "web/native.ts", "web/store.ts", "web/alarm.ts", "web/app.ts"]
+  "files": ["web/types.d.ts", "web/native.ts", "web/store.ts", "web/sync.ts", "web/syncview.ts", "web/alarm.ts", "web/app.ts"]
 }

@@ -6,6 +6,7 @@ interface Window {
     resetScale(): void;
     checkForUpdates(manual: boolean): void;
     setAlarm(id: string, alarm: number | null): void;
+    openSync(): void;
   };
 }
 
@@ -17,6 +18,7 @@ interface TodoItem {
   priority: number;
   inProgress: boolean;
   alarm?: number;
+  modified?: number;
 }
 
 interface MenuEntry {

@@ -145,18 +145,18 @@ function openAlarm(anchor: HTMLElement, id: string) {
     if (e.key === "Escape") { e.preventDefault(); close(); }
     else if (e.key === "Enter") { e.preventDefault(); save(); }
   };
-  const onDown = (e: MouseEvent) => {
+  const onDown = (e: PointerEvent) => {
     if (pop.contains(e.target as Node)) return;
     close();
     lastAlarmClose = { id, at: Date.now() };
   };
   document.addEventListener("keydown", onKey, true);
-  document.addEventListener("mousedown", onDown, true);
+  document.addEventListener("pointerdown", onDown, true);
   window.addEventListener("resize", place);
 
   function close() {
     document.removeEventListener("keydown", onKey, true);
-    document.removeEventListener("mousedown", onDown, true);
+    document.removeEventListener("pointerdown", onDown, true);
     window.removeEventListener("resize", place);
     pop.remove();
     closeAlarm = null;

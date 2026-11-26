@@ -1,8 +1,15 @@
 const STARRED = 2;
 
+const DELETED_KEPT = 400 * 86400;
+
+const withoutModified = (i: TodoItem) => { const { modified, ...rest } = i; return JSON.stringify(rest); };
+
 class Store {
   items: TodoItem[] = [];
+  deleted: Record<string, number> = {};
+  orderModified = 0;
   onChange: () => void = () => {};
+  onLocalChange: () => void = () => {};
 
   async load() {
     try {
@@ -15,6 +22,7 @@ class Store {
         priority: r.priority ? STARRED : 0,
         inProgress: r.inProgress ?? false,
         ...(typeof r.alarm === "number" ? { alarm: r.alarm } : {}),
+        ...(typeof r.modified === "number" ? { modified: r.modified } : {}),
       }));
       this.items = [...items.filter((i) => !i.done), ...items.filter((i) => i.done)];
     } catch {
@@ -22,17 +30,48 @@ class Store {
     }
   }
 
-  private set(next: TodoItem[]) {
+  private arrange(next: TodoItem[]) {
     const wasDone = new Set(this.items.filter((i) => i.done).map((i) => i.id));
     const unticked = next.filter((i) => !i.done && wasDone.has(i.id));
     const open = next.filter((i) => !i.done && !wasDone.has(i.id));
     const done = next.filter((i) => i.done).map((i) => {
+      if (i.alarm == null && !i.inProgress) return i;
       const { alarm, ...rest } = i;
       return { ...rest, inProgress: false };
     });
-    this.items = [...unticked, ...open, ...done];
+    return [...unticked, ...open, ...done];
+  }
+
+  private set(next: TodoItem[]) {
+    const prev = this.items;
+    const arranged = this.arrange(next);
+    this.stamp(prev, arranged);
+    this.items = arranged;
     native("save", { json: JSON.stringify(this.items) });
     this.onChange();
+    this.onLocalChange();
+  }
+
+  replace(items: TodoItem[], deleted: Record<string, number>, orderModified: number) {
+    this.items = this.arrange(items);
+    this.deleted = deleted;
+    this.orderModified = orderModified;
+    native("save", { json: JSON.stringify(this.items) });
+    this.onChange();
+  }
+
+  private stamp(prev: TodoItem[], next: TodoItem[]) {
+    const now = nowRef();
+    const before = new Map(prev.map((i) => [i.id, withoutModified(i)]));
+    for (let n = 0; n < next.length; n++) {
+      if (before.get(next[n].id) !== withoutModified(next[n])) next[n] = { ...next[n], modified: now };
+    }
+    const nextIds = new Set(next.map((i) => i.id));
+    for (const i of prev) if (!nextIds.has(i.id)) this.deleted[i.id] = now;
+    for (const [id, at] of Object.entries(this.deleted)) if (at < now - DELETED_KEPT) delete this.deleted[id];
+    const prevIds = new Set(prev.map((i) => i.id));
+    const kept = (list: TodoItem[], other: Set<string>) => list.filter((i) => other.has(i.id)).map((i) => i.id).join();
+    if (kept(prev, nextIds) !== kept(next, prevIds)) this.orderModified = now;
   }
 
   get(id: string) {
