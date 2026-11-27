@@ -197,7 +197,7 @@ main { flex: 1; overflow-y: auto; position: relative; padding: 0 4px; background
   flex: none;
 }
 
-.check, .star, .alarm {
+.check, .star, .alarm, .task-note {
   flex: none;
   border: 0;
   background: none;
@@ -237,7 +237,11 @@ main { flex: 1; overflow-y: auto; position: relative; padding: 0 4px; background
 .alarm.on { color: var(--accent); }
 .alarm-time { font-size: calc(12px * var(--s)); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-.row.done .star, .row.done .alarm { opacity: 0.4; }
+.task-note { width: calc(20px * var(--s)); justify-content: center; color: var(--icon); }
+.task-note svg { width: calc(16px * var(--s)); height: calc(16px * var(--s)); }
+.task-note.on { color: var(--accent); }
+
+.row.done .star, .row.done .alarm, .row.done .task-note:not(.on) { opacity: 0.4; }
 
 .title-area { flex: 1; min-width: 0; align-self: stretch; }
 .title-text { overflow-wrap: anywhere; white-space: pre-wrap; }
@@ -403,6 +407,8 @@ footer {
 :root[data-platform="ios"] .btn { font-size: 15px; padding: 6px 14px; }
 :root[data-platform="ios"] .btn.icon, :root[data-platform="ios"] #theme, :root[data-platform="ios"] #new-list, :root[data-platform="ios"] #lists, :root[data-platform="ios"] #note { width: 40px; height: 34px; }
 :root[data-platform="ios"] #list-name { font-size: 16px; }
+:root[data-platform="ios"] .row { gap: 5px; }
+:root[data-platform="ios"] .num { min-width: calc(22px * var(--s)); }
 :root[data-platform="ios"] .note-text { font-size: 16px; }
 :root[data-platform="ios"] #clear-done { height: 34px; }
 :root[data-platform="ios"] .sheet { font-size: 15px; }

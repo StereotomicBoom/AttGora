@@ -70,22 +70,32 @@ function renameList(list: TodoList) {
 
 let noteOpen = false;
 
-function openNote() {
+function openNotePanel(heading: string, get: () => string, set: (text: string) => void) {
   if (noteOpen) return;
   noteOpen = true;
   let box: HTMLTextAreaElement;
   let timer = 0;
   const save = () => {
     clearTimeout(timer);
-    if (box.value !== store.note.text) { store.setNote(box.value); render(); }
+    if (box.value !== get()) { set(box.value); render(); }
   };
   openPanel("note-sheet", (sheet, close) => {
     box = el("textarea", "sheet-field note-text");
-    box.value = store.note.text;
+    box.value = get();
     box.placeholder = "Skriv anteckningar här";
     box.spellcheck = false;
     box.addEventListener("input", () => { clearTimeout(timer); timer = window.setTimeout(save, 600); });
-    sheet.append(el("div", "sheet-heading", "Anteckningar"), box, panelButtons(["Klar", "default", close]));
+    sheet.append(el("div", "sheet-heading", heading), box, panelButtons(["Klar", "default", close]));
     requestAnimationFrame(() => box.focus());
   }, () => { save(); noteOpen = false; });
+}
+
+function openNote() {
+  openNotePanel("Anteckningar", () => store.note.text, (text) => store.setNote(text));
+}
+
+function openTaskNote(id: string) {
+  const item = store.get(id);
+  if (!item) return;
+  openNotePanel(item.title || "Anteckning", () => store.get(id)?.note ?? "", (text) => store.update(id, { note: text }));
 }

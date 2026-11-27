@@ -22,6 +22,7 @@ interface TodoItem {
   alarm?: number;
   modified?: number;
   list?: string;
+  note?: string;
 }
 
 interface TodoList {

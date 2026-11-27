@@ -128,6 +128,13 @@ function renderRow(item: TodoItem, number: number) {
     openAlarm(alarm, item.id);
   });
 
+  const pen = el("button", "task-note");
+  pen.classList.toggle("on", !!item.note);
+  pen.innerHTML = icons.pencil;
+  pen.setAttribute("aria-label", "Anteckning");
+  pen.title = item.note ? "Anteckning: " + item.note.slice(0, 80) : "Lägg till anteckning";
+  pen.addEventListener("click", () => openTaskNote(item.id));
+
   const area = el("div", "title-area");
   area.title = "Dubbelklicka: flytta överst";
   if (editingId === item.id) {
@@ -160,7 +167,7 @@ function renderRow(item: TodoItem, number: number) {
 
   row.addEventListener("pointerdown", (e) => startPress(e, wrap, item));
 
-  row.append(num, check, star, alarm, area);
+  row.append(num, check, star, alarm, pen, area);
   wrap.append(row, el("div", "rule"));
   return wrap;
 }

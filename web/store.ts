@@ -29,6 +29,7 @@ class Store {
         ...(typeof r.alarm === "number" ? { alarm: r.alarm } : {}),
         ...(typeof r.modified === "number" ? { modified: r.modified } : {}),
         list: r.list ?? DEFAULT_LIST,
+        ...(typeof r.note === "string" && r.note ? { note: r.note } : {}),
       }));
       this.items = [...items.filter((i) => !i.done), ...items.filter((i) => i.done)];
     } catch {
@@ -183,6 +184,7 @@ class Store {
       if (i.id !== id) return i;
       const updated = { ...i, ...change };
       if (updated.alarm == null) delete updated.alarm;
+      if (!updated.note) delete updated.note;
       return updated;
     }));
   }
